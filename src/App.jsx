@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { profile, tabs } from './data.js';
 import { useHashTab } from './hooks/useHashTab.js';
 import { useTheme } from './hooks/useTheme.js';
@@ -14,6 +15,11 @@ export default function App() {
   const { theme, toggle } = useTheme();
   const [active, select] = useHashTab(tabIds, 'projects');
   const ActivePanel = panels[active];
+
+  // Each tab renders a fresh panel, so it starts at the top; on phones the page itself scrolls.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [active]);
 
   return (
     <div className="shell">

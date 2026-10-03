@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { afterEach, beforeEach } from 'vitest';
 
-// jsdom lacks matchMedia and scrollIntoView.
+// jsdom lacks matchMedia, scrollIntoView and scrollTo.
 if (!window.matchMedia) {
   window.matchMedia = (query) => ({
     matches: false,
@@ -13,6 +13,7 @@ if (!window.matchMedia) {
   });
 }
 Element.prototype.scrollIntoView = () => {};
+window.scrollTo = () => {};
 
 beforeEach(() => {
   localStorage.clear();

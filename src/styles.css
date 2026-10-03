@@ -159,12 +159,6 @@ button {
   border-radius: 14px;
   box-shadow: var(--shadow);
 }
-@media (min-width: 900px) and (min-height: 1000px) {
-  .id {
-    position: sticky;
-    top: calc(env(safe-area-inset-top, 0px) + 24px);
-  }
-}
 .slot {
   width: 46px;
   height: 8px;
@@ -418,10 +412,15 @@ button {
   border: 1px solid var(--line);
   border-radius: 0 14px 14px 14px;
   box-shadow: var(--shadow);
-  padding: 30px clamp(16px, 3vw, 34px) 34px;
+  display: flex;
+  flex-direction: column;
   min-height: 560px;
 }
 .panel {
+  flex: 1;
+  padding: 30px clamp(16px, 3vw, 34px) 34px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
   display: flex;
   flex-direction: column;
   gap: 26px;
@@ -792,4 +791,158 @@ button {
 }
 .id .contact .k {
   font-size: 12.5px;
+}
+
+/* ---------- app layout ---------- */
+.more {
+  display: none;
+}
+.id {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+/* Desktop: the page never scrolls. The card and the sheet each scroll on their own. */
+@media (min-width: 900px) {
+  .shell {
+    height: 100dvh;
+    padding-block: 24px;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .id {
+    align-self: start;
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+  .tabs-row {
+    flex: none;
+  }
+  .sheet {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .panel {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .foot {
+    flex: none;
+  }
+}
+
+/* Phone and small screens: a compact header on top, tabs as a bottom bar. */
+@media (max-width: 899px) {
+  .shell {
+    padding-block: 12px calc(84px + env(safe-area-inset-bottom, 0px));
+    gap: 14px;
+  }
+  .id {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px 14px;
+    padding: 14px;
+  }
+  .id > * {
+    grid-column: 1 / -1;
+  }
+  .id .slot,
+  .id .perf,
+  .id .stack-sec {
+    display: none;
+  }
+  .id .photo {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+  }
+  .id .photo::after {
+    display: none;
+  }
+  .id .photo-in {
+    aspect-ratio: 1;
+    border-radius: 50%;
+  }
+  .id .who {
+    grid-column: 2;
+    grid-row: 1;
+    padding-right: 76px;
+  }
+  .id .who h1 {
+    font-size: 21px;
+  }
+  .id .role {
+    font-size: 14.5px;
+  }
+  .id .more {
+    display: inline-flex;
+    justify-self: start;
+    font: 600 12px var(--f-mono);
+    color: var(--label);
+    background: transparent;
+    border: 1px solid var(--label);
+    border-radius: 99px;
+    padding: 5px 12px;
+    cursor: pointer;
+  }
+  .id .contact-sec {
+    display: none;
+  }
+  .id.open .contact-sec {
+    display: flex;
+  }
+  .id .contact-sec .lbl {
+    display: none;
+  }
+
+  .tabs-row {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    margin: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -8px 24px -16px rgba(0, 0, 0, 0.45);
+  }
+  .tablist {
+    gap: 0;
+    overflow: visible;
+    padding: 0;
+  }
+  .tab,
+  .tab[aria-selected='true'] {
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    margin: 0;
+    padding: 9px 2px 10px;
+    font-size: 12.5px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .tab[aria-selected='true'] {
+    color: var(--ink-strong);
+    font-weight: 700;
+    background: var(--accent-soft);
+    box-shadow: inset 0 3px 0 var(--accent);
+  }
+  .sheet {
+    min-height: 0;
+    border-radius: 14px;
+  }
 }

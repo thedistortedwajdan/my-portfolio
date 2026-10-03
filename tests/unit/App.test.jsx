@@ -50,6 +50,15 @@ describe('App', () => {
     expect(screen.getByRole('tab', { name: /Projects/ })).toHaveFocus();
   });
 
+  it('lets small screens fold the contact details away', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const toggle = screen.getByRole('button', { name: 'Contact me' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await user.click(toggle);
+    expect(screen.getByRole('button', { name: 'Hide contact' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('opens the tech inventory from the profile card', async () => {
     const user = userEvent.setup();
     render(<App />);
