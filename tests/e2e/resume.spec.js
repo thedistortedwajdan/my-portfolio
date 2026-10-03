@@ -351,3 +351,90 @@ test.describe('scrollbars', () => {
     expect(metrics).toEqual({ cardScrolls: true, panelScrolls: true, pageScrolls: false });
   });
 });
+
+test.describe('browsers with no built-in PDF viewer (Chrome and Brave on Android)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'pdfViewerEnabled', { value: false });
+    });
+  });
+
+  test('draw the resume on canvases, with no iframe and no console or CSP errors', async ({ page }) => {
+    const problems = await watchProblems(page);
+    await page.setViewportSize({ width: 400, height: 860 });
+    await page.goto('/');
+    await open(page);
+    await expect(dialog(page).locator('iframe')).toHaveCount(0);
+    const canvas = dialog(page).locator('canvas.rm-page').first();
+    await expect(canvas).toBeVisible({ timeout: 15000 });
+    await expect(dialog(page).getByRole('status')).toBeHidden();
+    await expect(canvas).toHaveAttribute('aria-label', 'Resume, page 1 of 1');
+
+    const stats = await canvas.evaluate((node) => {
+      const { data } = node.getContext('2d').getImageData(0, 0, node.width, node.height);
+      let dark = 0;
+      for (let i = 0; i < data.length; i += 4) if (data[i] < 100 && data[i + 1] < 100 && data[i + 2] < 100) dark += 1;
+      return { width: node.width, height: node.height, dark };
+    });
+    expect(stats.width).toBeGreaterThan(300);
+    expect(stats.height).toBeGreaterThan(stats.width);
+    expect(stats.dark, 'the page has dark text on it, so it is not blank').toBeGreaterThan(500);
+
+    const box = await canvas.boundingBox();
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(400);
+    expect(problems).toEqual([]);
+  });
+
+  test('loads PDF.js only when the modal is opened', async ({ page }) => {
+    const loaded = [];
+    page.on('request', (request) => {
+      if (/pdf(\.worker)?\.min/.test(request.url())) loaded.push(request.url());
+    });
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    expect(loaded).toEqual([]);
+    await open(page);
+    await expect.poll(() => loaded.length).toBeGreaterThan(0);
+  });
+
+  test('close, reopen and Escape still work, and the canvases are cleaned up', async ({ page }) => {
+    await page.goto('/');
+    for (let round = 0; round < 2; round += 1) {
+      await open(page);
+      await expect(dialog(page).locator('canvas.rm-page')).toHaveCount(1, { timeout: 15000 });
+      await page.keyboard.press('Escape');
+      await expect(dialog(page)).toBeHidden();
+    }
+    await expect(page.locator('canvas.rm-page')).toHaveCount(0);
+  });
+
+  test('still passes the accessibility audit, light and dark', async ({ browser }) => {
+    for (const colorScheme of ['light', 'dark']) {
+      const context = await browser.newContext({ colorScheme, viewport: { width: 400, height: 860 } });
+      await context.addInitScript(() => {
+        Object.defineProperty(navigator, 'pdfViewerEnabled', { value: false });
+      });
+      const page = await context.newPage();
+      await page.goto('/');
+      await open(page);
+      await expect(dialog(page).locator('canvas.rm-page')).toBeVisible({ timeout: 15000 });
+      const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+      expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`)).toEqual([]);
+      await context.close();
+    }
+  });
+
+  test('a tall page scrolls inside the modal, not the page behind it', async ({ page }) => {
+    await page.setViewportSize({ width: 400, height: 500 });
+    await page.goto('/');
+    await open(page);
+    await expect(dialog(page).locator('canvas.rm-page')).toBeVisible({ timeout: 15000 });
+    const metrics = await dialog(page).locator('.rm-scroll').evaluate((node) => ({
+      scrolls: node.scrollHeight > node.clientHeight,
+    }));
+    expect(metrics.scrolls).toBe(true);
+  });
+});

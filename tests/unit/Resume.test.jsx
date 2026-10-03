@@ -122,6 +122,59 @@ describe('resume modal', () => {
   });
 });
 
+describe('browsers with no PDF viewer', () => {
+  const originals = {};
+
+  function setNavigator(name, value) {
+    if (!(name in originals)) originals[name] = Object.getOwnPropertyDescriptor(navigator, name);
+    Object.defineProperty(navigator, name, { value, configurable: true });
+  }
+
+  function setViewer(value) {
+    setNavigator('pdfViewerEnabled', value);
+  }
+
+  afterEach(() => {
+    for (const [name, descriptor] of Object.entries(originals)) {
+      if (descriptor) Object.defineProperty(navigator, name, descriptor);
+      else delete navigator[name];
+      delete originals[name];
+    }
+  });
+
+  it('use the canvas renderer instead of an iframe, and say so if it cannot draw', async () => {
+    setViewer(false);
+    const user = userEvent.setup();
+    render(<App />);
+    await openModal(user);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.querySelector('iframe')).toBeNull();
+    expect(dialog.querySelector('.rm-scroll')).not.toBeNull();
+    // jsdom cannot run PDF.js, so the failure path shows, with a way out.
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(/Use Download/);
+    expect(within(dialog).getByRole('link', { name: /Download/ })).toBeInTheDocument();
+  });
+
+  it('treat Android as having none when the browser does not say', async () => {
+    setViewer(undefined);
+    setNavigator('userAgent', 'Mozilla/5.0 (Linux; Android 14) Chrome/130 Mobile Safari/537.36');
+    const user = userEvent.setup();
+    render(<App />);
+    await openModal(user);
+    expect(document.querySelector('iframe')).toBeNull();
+    expect(document.querySelector('.rm-scroll')).not.toBeNull();
+  });
+
+  it('keep the iframe when the browser reports a viewer', async () => {
+    setViewer(true);
+    const user = userEvent.setup();
+    render(<App />);
+    await openModal(user);
+    expect(document.querySelector('iframe')).not.toBeNull();
+    expect(document.querySelector('.rm-scroll')).toBeNull();
+  });
+});
+
 describe('resume file', () => {
   it('is a real, current, single-page PDF of a sensible size', () => {
     const bytes = readFileSync(pdfPath);

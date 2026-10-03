@@ -40,7 +40,8 @@ if (!existsSync('dist/index.html')) {
   for (const file of assets) {
     const text = readFileSync(file, 'utf8');
     const urls = text.match(/http:\/\/[^\s"'<>)]+/g) ?? [];
-    const insecure = urls.filter((u) => !/^http:\/\/(www\.w3\.org|localhost)/.test(u));
+    // `http://${host}` is a template, and example.com is a placeholder inside PDF.js; neither is loaded.
+    const insecure = urls.filter((u) => !/^http:\/\/(www\.w3\.org|localhost|example\.com|\$\{)/.test(u));
     if (insecure.length) fail(`${file}: insecure URL(s) ${[...new Set(insecure)].join(', ')}`);
   }
   if (walk('dist').some((f) => f.endsWith('.map'))) fail('dist contains source maps');

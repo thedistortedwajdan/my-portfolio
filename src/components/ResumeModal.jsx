@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { resume } from '../data.js';
+import PdfCanvas from './PdfCanvas.jsx';
 
 const CLOSE_MS = 220;
+
+// Chrome and Brave on Android have no PDF viewer, so they get the canvas renderer instead of an iframe.
+function hasPdfViewer() {
+  const flag = navigator.pdfViewerEnabled;
+  if (typeof flag === 'boolean') return flag;
+  return !/Android/i.test(navigator.userAgent);
+}
 
 function prefersReducedMotion() {
   return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -13,6 +21,7 @@ export default function ResumeModal({ open, onClose }) {
   const dialogRef = useRef(null);
   const timer = useRef(0);
   const [closing, setClosing] = useState(false);
+  const [viewer] = useState(hasPdfViewer);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -85,7 +94,12 @@ export default function ResumeModal({ open, onClose }) {
         </div>
       </header>
       <div className="rm-body">
-        {open && <iframe className="rm-frame" title="Resume, PDF" src={`${resume.url}#view=FitH`} />}
+        {open &&
+          (viewer ? (
+            <iframe className="rm-frame" title="Resume, PDF" src={`${resume.url}#view=FitH`} />
+          ) : (
+            <PdfCanvas url={resume.url} label="Resume" />
+          ))}
       </div>
       <p className="rm-foot">
         Not showing on your device?{' '}

@@ -1189,3 +1189,32 @@ html:has(dialog[open]) {
     transform: translateY(40px);
   }
 }
+
+/* Canvas fallback for browsers with no PDF viewer. */
+.rm-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumb) transparent;
+}
+.rm-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rm-page {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+}
+.rm-note {
+  padding: 24px 8px;
+  text-align: center;
+  font: 400 13px var(--f-mono);
+  color: var(--ink-2);
+}
