@@ -33,6 +33,13 @@ try {
         await page.screenshot({ path: file, fullPage: vp.fullPage });
         console.log('saved', file);
       }
+      // The resume modal, over the first tab.
+      await page.goto(`${url}/#projects`);
+      await page.getByRole('button', { name: /View resume/ }).click();
+      await page.waitForTimeout(700);
+      const modalFile = path.join(outDir, `${colorScheme}-${vp.name}-resume-modal.png`);
+      await page.screenshot({ path: modalFile });
+      console.log('saved', modalFile);
       await context.close();
     }
   }

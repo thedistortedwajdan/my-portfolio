@@ -5,6 +5,7 @@ describe('content', () => {
   it('has the entries from the CV', () => {
     expect(projects.map((p) => p.title)).toEqual(['GigPilot', 'Social Media Website']);
     expect(experience.map((e) => e.org)).toEqual([
+      'E Ocean Technologies',
       'Vaulsys (Vendor for NayaPay)',
       'Logiciel Services, LLC',
       'Syslab.AI',

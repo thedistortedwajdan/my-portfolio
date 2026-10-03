@@ -14,6 +14,17 @@ if (!window.matchMedia) {
 }
 Element.prototype.scrollIntoView = () => {};
 window.scrollTo = () => {};
+// jsdom has no <dialog> behaviour. This mirrors the parts the app relies on.
+if (typeof HTMLDialogElement !== 'undefined' && !HTMLDialogElement.prototype.showModal) {
+  HTMLDialogElement.prototype.showModal = function showModal() {
+    this.setAttribute('open', '');
+  };
+  HTMLDialogElement.prototype.close = function close() {
+    if (!this.hasAttribute('open')) return;
+    this.removeAttribute('open');
+    this.dispatchEvent(new Event('close'));
+  };
+}
 
 beforeEach(() => {
   localStorage.clear();

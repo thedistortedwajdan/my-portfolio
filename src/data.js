@@ -3,11 +3,16 @@
 
 export const GITHUB_URL = 'https://github.com/thedistortedwajdan';
 
+export const resume = {
+  url: '/Muhammad_Wajdan_Ismail_Resume.pdf',
+  fileName: 'Muhammad_Wajdan_Ismail_Resume.pdf',
+};
+
 export const profile = {
   name: 'Muhammad Wajdan Ismail',
   role: 'Software Engineer',
   photo: '/photo.jpg',
-  badge: 'Now at Vaulsys',
+  badge: 'Now at E Ocean Technologies',
   city: 'Karachi',
   timeZone: 'Asia/Karachi',
   timeZoneLabel: 'PKT',
@@ -28,12 +33,13 @@ export const contacts = [
 export const sidebarStack = [
   'Java',
   'Spring Boot',
-  'Node.js',
-  '.NET',
+  'NestJS',
+  'Next.js',
   'ReactJS',
-  'PostgreSQL',
-  'Oracle',
+  'MySQL',
+  'Redis',
   'MongoDB',
+  'AWS',
 ];
 
 export const projects = [
@@ -68,10 +74,27 @@ export const projects = [
 
 export const experience = [
   {
-    id: 'vaulsys',
+    id: 'eocean',
     current: true,
-    since: '2024-11',
-    when: 'Nov 2024 to now',
+    since: '2026-08',
+    when: 'Aug 2026 to now',
+    title: 'Software Engineer',
+    org: 'E Ocean Technologies',
+    bullets: [
+      'Build and run microservices behind Meta business and customer engagement portals, covering WhatsApp, Instagram and Messenger.',
+      'Integrated the Meta messaging APIs and webhooks so one portal handles conversations from every channel.',
+      'Building new web chat and calling features with WebSockets and WebRTC, and working on the Meta Business Platform APIs for messaging and calling over WebSockets.',
+      'Built portal features in Next.js and NestJS, and kept the Spring Boot and Spring MVC services behind them in step.',
+      'Sped up busy endpoints with MySQL indexing and Redis caching, and moved message delivery and retries onto SQS so traffic spikes no longer block requests.',
+      'Added Google SSO for portal sign-in and handle production issues across services, from tracing the cause to shipping the fix.',
+      'Work hands on with AWS: S3 for media, EC2 and RDS for services and data, SQS for queues, and Lambda functions for event-driven jobs such as processing webhook events off the main services.',
+    ],
+    chips: ['Microservices', 'Spring Boot', 'Next.js', 'NestJS', 'Redis', 'WebRTC', 'WebSockets', 'AWS', 'Meta APIs'],
+  },
+  {
+    id: 'vaulsys',
+    when: 'Nov 2024 to Aug 2026',
+    duration: '1 yr 10 mo',
     title: 'Software Engineer',
     org: 'Vaulsys (Vendor for NayaPay)',
     place: 'Karachi, Pakistan',
@@ -79,7 +102,7 @@ export const experience = [
       'Designed and built the RAAST P2M CSP and MSP Request-To-Pay APIs for real-time digital payments between merchants and consumers.',
       'Built the Visa Scan N Pay and Visa Direct Remittance APIs for cross-border payments and local QR-based payments.',
       'Worked on card transaction APIs for e-commerce, POS and international transactions via Euronet, and domestic transactions through 1Link.',
-      'Lead development and maintenance of core systems: the switch, the wallet and the non-financial APIs underneath them.',
+      'Led development and maintenance of core systems: the switch, the wallet and the non-financial APIs underneath them.',
     ],
     chips: ['RAAST', 'Visa', '1Link', 'Euronet', 'Payment APIs'],
   },
@@ -152,6 +175,7 @@ export const techGroups = [
     name: 'Frontend',
     items: [
       { name: 'ReactJS' },
+      { name: 'Next.js' },
       { name: 'Tailwind' },
     ],
   },
@@ -159,6 +183,8 @@ export const techGroups = [
     name: 'Backend',
     items: [
       { name: 'Spring Boot' },
+      { name: 'Spring MVC' },
+      { name: 'NestJS' },
       { name: 'NodeJS' },
       { name: '.NET' },
     ],
@@ -170,7 +196,23 @@ export const techGroups = [
       { name: 'Oracle' },
       { name: 'MongoDB' },
       { name: 'MySQL' },
+      { name: 'Redis' },
     ],
+  },
+  {
+    name: 'AWS and auth',
+    items: [
+      { name: 'S3' },
+      { name: 'EC2' },
+      { name: 'RDS' },
+      { name: 'SQS' },
+      { name: 'Lambda' },
+      { name: 'Google SSO' },
+    ],
+  },
+  {
+    name: 'Realtime',
+    items: [{ name: 'WebSockets' }, { name: 'WebRTC' }],
   },
 ];
 

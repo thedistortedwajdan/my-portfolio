@@ -14,6 +14,8 @@
   --accent-soft: #ecd3a8;
   --good: #5d7b3a;
   --shadow: 0 10px 30px -18px rgba(90, 60, 20, 0.5);
+  --scrim: rgba(36, 24, 12, 0.55);
+  --thumb: rgba(106, 87, 66, 0.6);
   --grain: 0.1;
   --f-display: 'Bricolage Grotesque Variable', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
   --f-body: 'Instrument Sans Variable', 'Segoe UI', system-ui, sans-serif;
@@ -33,6 +35,8 @@
     --accent-soft: #4d4337;
     --good: #9bc278;
     --shadow: 0 12px 30px -18px rgba(0, 0, 0, 0.55);
+    --scrim: rgba(10, 12, 20, 0.66);
+    --thumb: rgba(168, 176, 196, 0.55);
     --grain: 0.05;
   }
 }
@@ -49,6 +53,8 @@
   --accent-soft: #4d4337;
   --good: #9bc278;
   --shadow: 0 12px 30px -18px rgba(0, 0, 0, 0.55);
+  --scrim: rgba(10, 12, 20, 0.66);
+  --thumb: rgba(168, 176, 196, 0.55);
   --grain: 0.05;
 }
 
@@ -419,8 +425,6 @@ button {
 .panel {
   flex: 1;
   padding: 30px clamp(16px, 3vw, 34px) 34px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--line) transparent;
   display: flex;
   flex-direction: column;
   gap: 26px;
@@ -548,16 +552,18 @@ button {
 }
 .dash li {
   position: relative;
-  padding-left: 16px;
+  padding-left: 20px;
 }
 .dash li::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 0.7em;
+  top: 0.62em;
   width: 7px;
-  height: 1.5px;
-  background: var(--ink-2);
+  height: 7px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: rotate(45deg);
 }
 .pbody .chips,
 .tl-body .chips {
@@ -730,7 +736,8 @@ button {
 
 @media (prefers-reduced-motion: reduce) {
   *,
-  *::before {
+  *::before,
+  *::backdrop {
     animation: none !important;
     transition: none !important;
   }
@@ -796,10 +803,6 @@ button {
 /* ---------- app layout ---------- */
 .more {
   display: none;
-}
-.id {
-  scrollbar-width: thin;
-  scrollbar-color: var(--line) transparent;
 }
 
 /* Desktop: the page never scrolls. The card and the sheet each scroll on their own. */
@@ -880,6 +883,9 @@ button {
   .id .who h1 {
     font-size: 21px;
   }
+  .id .status {
+    border-radius: 16px;
+  }
   .id .role {
     font-size: 14.5px;
   }
@@ -944,5 +950,242 @@ button {
   .sheet {
     min-height: 0;
     border-radius: 14px;
+  }
+}
+
+/* ---------- scrollbars ---------- */
+/* Touch and small screens: the bar is always there. */
+html,
+.id,
+.panel {
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumb) transparent;
+}
+/* Mouse and trackpad on desktop: the card and the sheet show their bar only while hovered or focused. */
+@media (hover: hover) and (min-width: 900px) {
+  .id,
+  .panel {
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.25s ease;
+  }
+  .id:hover,
+  .id:focus-within,
+  .panel:hover,
+  .panel:focus-within {
+    scrollbar-color: var(--thumb) transparent;
+  }
+}
+
+/* ---------- resume actions ---------- */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.act {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 12px;
+  font: 600 13px var(--f-body);
+  color: var(--label);
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid var(--label);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    transform 0.2s;
+}
+.act svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.act:hover {
+  background: var(--accent-soft);
+}
+.act:active {
+  transform: translateY(1px);
+}
+.act-main {
+  color: var(--surface);
+  background: var(--label);
+}
+.act-main:hover {
+  color: var(--surface);
+  background: var(--label);
+  filter: brightness(1.12);
+}
+@media (max-width: 899px) {
+  .id .actions {
+    grid-column: 1 / -1;
+  }
+  .id .act {
+    padding: 8px 10px;
+    font-size: 12.5px;
+  }
+}
+
+/* ---------- resume modal ---------- */
+.resume-modal {
+  padding: 0;
+  margin: auto;
+  width: min(960px, calc(100vw - 32px));
+  max-width: none;
+  height: min(90dvh, 980px);
+  max-height: none;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 30px 80px -24px var(--scrim);
+  overflow: hidden;
+}
+.resume-modal[open] {
+  display: flex;
+  flex-direction: column;
+  animation: modal-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.resume-modal[open]::backdrop {
+  background: var(--scrim);
+  backdrop-filter: blur(5px);
+  animation: fade-in 0.26s ease both;
+}
+.resume-modal.closing {
+  animation: modal-out 0.2s ease both;
+}
+.resume-modal.closing::backdrop {
+  animation: fade-out 0.2s ease both;
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+@keyframes modal-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+.rm-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px 12px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.rm-head h2 {
+  font: 700 20px/1.1 var(--f-display);
+  letter-spacing: -0.015em;
+}
+.rm-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rm-tools .act {
+  flex: none;
+}
+.rm-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--ink-strong);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.rm-close:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.rm-close svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.rm-body {
+  flex: 1;
+  min-height: 0;
+  background: var(--surface-2);
+}
+.rm-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.rm-foot {
+  flex: none;
+  padding: 8px 20px;
+  font: 400 12px var(--f-mono);
+  color: var(--ink-2);
+  border-top: 1px solid var(--line);
+}
+.rm-foot a {
+  color: var(--accent);
+}
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+@media (max-width: 899px) {
+  .resume-modal {
+    width: 100vw;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+  .resume-modal[open] {
+    animation-name: sheet-in;
+  }
+  .resume-modal.closing {
+    animation-name: sheet-out;
+  }
+  .rm-head {
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
+  }
+  .rm-foot {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+}
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+}
+@keyframes sheet-out {
+  to {
+    opacity: 0;
+    transform: translateY(40px);
   }
 }

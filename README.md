@@ -16,6 +16,12 @@ npm run dev                       # http://localhost:5173
 All text lives in `src/data.js`: profile, contact links, projects, experience, education and tech groups.
 The photo is `public/photo.jpg`. Tab counts and the duration of the current role update on their own.
 
+## Resume PDF
+
+The downloadable resume is `public/Muhammad_Wajdan_Ismail_Resume.pdf`, built from `resume/resume.tex`.
+After changing the CV text, run `npm run resume` (needs a LaTeX install with `pdflatex`) and commit the new PDF.
+Keep it to one page. The site's View and Download buttons both point at this file.
+
 ## Quality gates
 
 `npm run check` runs these in order and stops at the first failure:

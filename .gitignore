@@ -12,3 +12,7 @@ screenshots
 .claude/
 CLAUDE.md
 docs/claude-commands/
+resume/*.aux
+resume/*.log
+resume/*.out
+resume/*.pdf

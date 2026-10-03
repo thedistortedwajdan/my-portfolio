@@ -52,7 +52,8 @@ else {
   const headers = readFileSync('dist/_headers', 'utf8');
   for (const required of [
     'Content-Security-Policy',
-    "frame-ancestors 'none'",
+    "frame-ancestors 'self'",
+    "frame-src 'self'",
     'X-Content-Type-Options: nosniff',
     'Referrer-Policy',
     'Strict-Transport-Security',

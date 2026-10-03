@@ -74,7 +74,7 @@ test('responses carry the security headers', async ({ page }) => {
   const response = await page.goto('/');
   const headers = response.headers();
   expect(headers['content-security-policy']).toContain("default-src 'self'");
-  expect(headers['content-security-policy']).toContain("frame-ancestors 'none'");
+  expect(headers['content-security-policy']).toContain("frame-ancestors 'self'");
   expect(headers['x-content-type-options']).toBe('nosniff');
   expect(headers['referrer-policy']).toBeTruthy();
 });

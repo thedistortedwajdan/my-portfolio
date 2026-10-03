@@ -11,7 +11,7 @@ function Entry({ item }) {
       <div className="tl-body">
         <h3>{item.title}</h3>
         <p className="org">{item.org}</p>
-        <p className="place">{item.place}</p>
+        {item.place && <p className="place">{item.place}</p>}
         {item.bullets.length > 0 && (
           <ul className="dash">
             {item.bullets.map((line) => (

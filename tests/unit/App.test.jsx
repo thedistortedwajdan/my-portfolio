@@ -19,9 +19,9 @@ describe('App', () => {
     const tabs = screen.getAllByRole('tab');
     expect(tabs.map((t) => t.textContent)).toEqual([
       'Projects2',
-      'Experience3',
+      'Experience4',
       'Education2',
-      'Tech stack13',
+      'Tech stack25',
     ]);
     expect(screen.getByRole('tab', { name: /Projects/ })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('heading', { name: 'GigPilot' })).toBeInTheDocument();
@@ -109,7 +109,7 @@ describe('App', () => {
 
   it('opens every outbound link safely in a new tab', () => {
     render(<App />);
-    const external = screen.getAllByRole('link');
+    const external = screen.getAllByRole('link').filter((link) => !link.getAttribute('href').startsWith('/'));
     expect(external.length).toBeGreaterThanOrEqual(3);
     for (const link of external) {
       expect(link.getAttribute('href')).toMatch(/^https:\/\//);
@@ -122,7 +122,7 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(screen.getByRole('tab', { name: /Experience/ }));
-    const current = screen.getByText('Nov 2024 to now');
+    const current = screen.getByText('Aug 2026 to now');
     expect(current.parentElement.textContent).toMatch(/\d+ (yr|yrs|mo)/);
   });
 });

@@ -1,0 +1,168 @@
+%-------------------------
+% Resume source for the portfolio. Layout follows the existing CV (Jake's resume template).
+% Build with: npm run resume   (writes public/Muhammad_Wajdan_Ismail_Resume.pdf)
+%-------------------------
+\documentclass[letterpaper,10pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{fontawesome5}
+\input{glyphtounicode}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.6in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1.2in}
+\addtolength{\topmargin}{-.85in}
+\addtolength{\textheight}{1.85in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{
+  \vspace{-6pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-6pt}]
+
+\pdfgentounicode=1
+
+\newcommand{\resumeItem}[1]{\item\small{#1 \vspace{-2pt}}}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-1pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & \textbf{\small #2} \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-5pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & \textbf{\small #2}\\
+    \end{tabular*}\vspace{-5pt}
+}
+
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+\begin{document}
+
+\begin{center}
+    \textbf{\Huge \scshape Muhammad Wajdan Ismail} \\ \vspace{1pt}
+    \small Software Engineer \\ \vspace{1pt}
+    \small \faPhone* \underline{\href{tel:+923342007188}{+923342007188}} \hspace{1pt} $|$
+    \hspace{1pt}
+    \faEnvelope \hspace{1pt} \underline{\href{mailto:wajdan.mohammad@gmail.com}{wajdan.mohammad@gmail.com}} \hspace{1pt} $|$
+    \hspace{1pt}
+    \faLinkedin \hspace{1pt} \underline{\href{https://www.linkedin.com/in/wajdan-ismail}{linkedin.com/in/wajdan-ismail}} \hspace{1pt} $|$
+    \hspace{1pt}
+    \faGithub \hspace{1pt} \underline{\href{https://github.com/thedistortedwajdan}{github.com/thedistortedwajdan}}
+\end{center}
+
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {National University of Computer and Emerging Sciences - FAST}{August 2024 -- Present}
+      {Master of Science in Software Engineering}{Karachi, Pakistan}
+    \resumeSubheading
+      {National University of Computer and Emerging Sciences - FAST}{August 2020 -- June 2024}
+      {Bachelor of Science in Computer Science}{Karachi, Pakistan}
+  \resumeSubHeadingListEnd
+
+\section{Experience}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {E Ocean Technologies}{August 2026 -- Present}
+      {Software Engineer}{}
+      \resumeItemListStart
+        \resumeItem{Build and run \textbf{microservices} (\textbf{Spring Boot}, \textbf{Spring MVC}, \textbf{NestJS}) behind \textbf{Meta} business and customer engagement portals covering \textbf{WhatsApp, Instagram and Messenger}, integrating the Meta messaging APIs and webhooks.}
+        \resumeItem{Building new \textbf{web chat and calling} features with \textbf{WebSockets and WebRTC}, and working on the Meta Business Platform APIs for messaging and calling over WebSockets.}
+        \resumeItem{Built portal features in \textbf{Next.js} and \textbf{NestJS}, and added \textbf{Google SSO} for portal sign-in.}
+        \resumeItem{Sped up busy endpoints with \textbf{MySQL} indexing and \textbf{Redis} caching, moved message delivery and retries onto \textbf{SQS} so traffic spikes no longer block requests, and fixed production issues across services.}
+        \resumeItem{Work hands on with \textbf{AWS}: S3 for media, EC2 and RDS for services and data, SQS for queues, and \textbf{Lambda} for event-driven jobs such as processing webhook events off the main services.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Vaulsys (Vendor for NayaPay)}{November 2024 -- August 2026}
+      {Software Engineer}{Karachi, Pakistan}
+      \resumeItemListStart
+        \resumeItem{Designed and developed \textbf{RAAST P2M CSP and MSP Request-To-Pay} APIs to enable real-time digital payments between merchants and consumers.}
+        \resumeItem{Built \textbf{Visa Scan N Pay and Visa Direct Remittance} APIs, enabling \textbf{cross-border payments as well as local QR-based payments}.}
+        \resumeItem{Worked on card-based transaction APIs covering \textbf{e-commerce (online) transactions, POS transactions}, as well as international transactions via \textbf{Euronet} and domestic transactions through \textbf{1Link}.}
+        \resumeItem{Led the development and maintenance of core systems including switch, wallet, and its underlying non-financial APIs.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Logiciel Services, LLC}{June 2024 -- October 2024}
+      {Junior Software Engineer}{Karachi, Pakistan}
+      \resumeItemListStart
+        \resumeItem{Gained hands-on experience in developing and maintaining a production-level feed server application for stock trading data.}
+        \resumeItem{Collaborated in the migration of the backend architecture, implementing new data structures to handle latency and race condition.}
+        \resumeItem{Code Documentation: Authored comprehensive documentation for new features and system modifications, ensuring clarity and ease of understanding for future developers.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Syslab.AI}{January 2024 -- April 2024}
+      {Full Stack Developer Intern}{Karachi, Pakistan}
+      \resumeItemListStart
+        \resumeItem{Frontend: Designed React pages and components from figma templates and worked on the responsiveness, API integration \& Role Based Routing of the application.}
+        \resumeItem{Backend: Implemented the Captcha Functionality on server-side which was earlier handled in the browser.}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+\section{Tech Stack}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Frontend}{: ReactJS $\bullet$ Next.js $\bullet$ Tailwind} \\
+     \textbf{Backend}{: Spring Boot $\bullet$ Spring MVC $\bullet$ NestJS $\bullet$ NodeJS $\bullet$ .NET} \\
+     \textbf{DataBase}{: PostgreSQL $\bullet$ Oracle $\bullet$ MongoDB $\bullet$ MySQL $\bullet$ Redis} \\
+     \textbf{Cloud and Auth}{: AWS (S3, EC2, RDS, SQS, Lambda) $\bullet$ Google SSO} \\
+     \textbf{Realtime}{: WebSockets $\bullet$ WebRTC} \\
+     \textbf{Languages}{: Java $\bullet$ JavaScript $\bullet$ C/C++ $\bullet$ C\#}
+    }}
+ \end{itemize}
+
+\section{Projects}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{GigPilot} $|$ \emph{Freelance Marketplace Platform}}{}
+          \resumeItemListStart
+            \resumeItem{A full-stack freelance marketplace connecting employers and freelancers with features like profile management, job posting, bidding, and secure task workflows.}
+            \resumeItem{Backend built with \textbf{Java}, \textbf{Spring Boot}, and \textbf{RESTful APIs} for scalable service integration. Implemented JWT-based authentication, role-based access control, and modularized controllers.}
+            \resumeItem{Frontend built with \textbf{ReactJS} and \textbf{Tailwind CSS}, featuring dynamic components, protected routes, and responsive UI design.}
+            \resumeItem{Database: Designed normalized schemas using \textbf{MySQL} and performed secure data operations with query builders and stored procedures.}
+          \resumeItemListEnd
+
+      \resumeProjectHeading
+          {\textbf{Social Media Website}}{}
+          \resumeItemListStart
+            \resumeItem{\textbf{Features: Like/DisLike, Follow/UnFollow, Upload Posts, Videos and Pictures}}
+            \resumeItem{Frontend is built using create-react-app. Used \textbf{Material-UI} for styling, \textbf{axios} for making requests to the backend and used \textbf{react-router-dom's HashRouter} for routing.}
+            \resumeItem{Backend is built using express.js for setting up middlewares and routes, Used mongoose for database operations.}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+\end{document}
