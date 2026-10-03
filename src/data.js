@@ -142,34 +142,34 @@ export const techGroups = [
   {
     name: 'Languages',
     items: [
-      { name: 'Java', abbr: 'Jv' },
-      { name: 'JavaScript', abbr: 'JS' },
-      { name: 'C/C++', abbr: 'C+' },
-      { name: 'C#', abbr: 'C#' },
+      { name: 'Java' },
+      { name: 'JavaScript' },
+      { name: 'C/C++' },
+      { name: 'C#' },
     ],
   },
   {
     name: 'Frontend',
     items: [
-      { name: 'ReactJS', abbr: 'Re' },
-      { name: 'Tailwind', abbr: 'Tw' },
+      { name: 'ReactJS' },
+      { name: 'Tailwind' },
     ],
   },
   {
     name: 'Backend',
     items: [
-      { name: 'Spring Boot', abbr: 'Sb' },
-      { name: 'NodeJS', abbr: 'No' },
-      { name: '.NET', abbr: '.N' },
+      { name: 'Spring Boot' },
+      { name: 'NodeJS' },
+      { name: '.NET' },
     ],
   },
   {
     name: 'Databases',
     items: [
-      { name: 'PostgreSQL', abbr: 'Pg' },
-      { name: 'Oracle', abbr: 'Or' },
-      { name: 'MongoDB', abbr: 'Mg' },
-      { name: 'MySQL', abbr: 'My' },
+      { name: 'PostgreSQL' },
+      { name: 'Oracle' },
+      { name: 'MongoDB' },
+      { name: 'MySQL' },
     ],
   },
 ];

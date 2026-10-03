@@ -8,6 +8,7 @@
   --surface-2: #e6d6b6;
   --ink: #33261a;
   --ink-2: #6a5742;
+  --ink-strong: #1c130a;
   --line: #d6c19a;
   --accent: #8a4513;
   --accent-soft: #ecd3a8;
@@ -26,6 +27,7 @@
     --surface-2: #272c3d;
     --ink: #e0e4ef;
     --ink-2: #a8b0c4;
+    --ink-strong: #f6f8fd;
     --line: #4a5470;
     --accent: #e2b384;
     --accent-soft: #4d4337;
@@ -41,6 +43,7 @@
   --surface-2: #272c3d;
   --ink: #e0e4ef;
   --ink-2: #a8b0c4;
+  --ink-strong: #f6f8fd;
   --line: #4a5470;
   --accent: #e2b384;
   --accent-soft: #4d4337;
@@ -701,6 +704,18 @@ button {
   color: var(--accent);
   font: 500 12px var(--f-mono);
 }
+.tool .ico {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+.tool .ico-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .tool .tname {
   min-width: 0;
   overflow-wrap: anywhere;
@@ -720,4 +735,23 @@ button {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ---------- ID card contrast: labels in the accent, values in the strongest ink ---------- */
+.id {
+  color: var(--ink-strong);
+}
+.id .lbl,
+.id .contact .k {
+  color: var(--accent);
+  font-weight: 500;
+}
+.id .role,
+.id .clock,
+.id .contact .arr,
+.id .cp {
+  color: var(--ink-strong);
+}
+.id .chip {
+  color: var(--ink-strong);
 }
