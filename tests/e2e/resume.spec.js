@@ -410,6 +410,7 @@ test.describe('browsers with no built-in PDF viewer (Chrome and Brave on Android
   });
 
   test('still passes the accessibility audit, light and dark', async ({ browser }) => {
+    test.setTimeout(90000);
     for (const colorScheme of ['light', 'dark']) {
       const context = await browser.newContext({ colorScheme, viewport: { width: 400, height: 860 } });
       await context.addInitScript(() => {

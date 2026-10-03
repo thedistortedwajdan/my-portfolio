@@ -4,6 +4,7 @@ import { useHashTab } from './hooks/useHashTab.js';
 import { useTheme } from './hooks/useTheme.js';
 import { Education, Experience } from './components/Experience.jsx';
 import Projects from './components/Projects.jsx';
+import Scene from './components/Scene.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import Tabs from './components/Tabs.jsx';
 import TechStack from './components/TechStack.jsx';
@@ -22,15 +23,18 @@ export default function App() {
   }, [active]);
 
   return (
-    <div className="shell">
-      <Sidebar theme={theme} onToggleTheme={toggle} onOpenStack={() => select('stack')} />
-      <main className="main">
-        <Tabs tabs={tabs} active={active} onSelect={select} />
-        <div className="sheet">
-          <ActivePanel />
-        </div>
-        <p className="foot">© {profile.name}</p>
-      </main>
-    </div>
+    <>
+      <Scene />
+      <div className="shell">
+        <Sidebar theme={theme} onToggleTheme={toggle} onOpenStack={() => select('stack')} />
+        <main className="main">
+          <Tabs tabs={tabs} active={active} onSelect={select} />
+          <div className="sheet">
+            <ActivePanel />
+          </div>
+          <p className="foot">© {profile.name}</p>
+        </main>
+      </div>
+    </>
   );
 }
