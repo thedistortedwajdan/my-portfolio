@@ -8,7 +8,7 @@
   --surface-2: #e6d6b6;
   --ink: #33261a;
   --ink-2: #6a5742;
-  --ink-strong: #1c130a;
+  --ink-strong: #120b05;
   --line: #d6c19a;
   --accent: #8a4513;
   --accent-soft: #ecd3a8;
@@ -737,21 +737,59 @@ button {
   }
 }
 
-/* ---------- ID card contrast: labels in the accent, values in the strongest ink ---------- */
+/* ---------- ID card contrast: bold accent labels, strong ink, heavier values ---------- */
+:root {
+  --label: #4a1c02;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --label: #f0c08e;
+  }
+}
+:root[data-theme='dark'] {
+  --label: #f0c08e;
+}
 .id {
   color: var(--ink-strong);
 }
 .id .lbl,
 .id .contact .k {
-  color: var(--accent);
-  font-weight: 500;
+  color: var(--label);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.12em;
 }
-.id .role,
+.id .role {
+  color: var(--ink-strong);
+  font-size: 16px;
+  font-weight: 600;
+}
 .id .clock,
 .id .contact .arr,
 .id .cp {
   color: var(--ink-strong);
+  font-weight: 500;
+}
+.id .contact .v {
+  font-size: 15px;
+  font-weight: 650;
+}
+.id .status {
+  font-weight: 600;
 }
 .id .chip {
   color: var(--ink-strong);
+  font-weight: 500;
+  border-color: var(--label);
+  background: var(--accent-soft);
+}
+.id .lbl {
+  align-self: flex-start;
+  padding: 3px 9px;
+  border-radius: 4px;
+  background: var(--label);
+  color: var(--surface);
+}
+.id .contact .k {
+  font-size: 12.5px;
 }
