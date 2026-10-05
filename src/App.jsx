@@ -30,7 +30,7 @@ export default function App() {
         <main className="main">
           <Tabs tabs={tabs} active={active} onSelect={select} />
           <div className="sheet">
-            <ActivePanel />
+            <ActivePanel theme={theme} />
           </div>
           <p className="foot">© {profile.name}</p>
         </main>
