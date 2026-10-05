@@ -40,6 +40,17 @@ try {
       const modalFile = path.join(outDir, `${colorScheme}-${vp.name}-resume-modal.png`);
       await page.screenshot({ path: modalFile });
       console.log('saved', modalFile);
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(350);
+
+      // A project opened from its card, on the slide that shows the MPIN step.
+      await page.goto(`${url}/#projects`);
+      await page.getByRole('button', { name: /See details: Folio/ }).click();
+      await page.getByRole('tab', { name: 'Send: confirm with MPIN', exact: true }).click();
+      await page.waitForTimeout(1100);
+      const projectFile = path.join(outDir, `${colorScheme}-${vp.name}-project-modal.png`);
+      await page.screenshot({ path: projectFile });
+      console.log('saved', projectFile);
       await context.close();
     }
   }

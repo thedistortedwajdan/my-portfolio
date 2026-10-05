@@ -16,6 +16,16 @@ npm run dev                       # http://localhost:5173
 All text lives in `src/data.js`: profile, contact links, projects, experience, education and tech groups.
 The photo is `public/photo.jpg`. Tab counts and the duration of the current role update on their own.
 
+Each project opens in a modal with a slide show and detail tabs. Their content is in `src/projectDetails.js`:
+the slides (clips, screenshots, phone screens, text cards) and the tabs. The Folio pictures and clips are in
+`public/projects/folio/` as `screens/<name>-<theme>.webp`, `thumbs/` (320 x 200), `video/<id>.mp4` with a
+`-poster.jpg`, and `card-<theme>.webp` for the card. To add a project, add its media the same way and an entry
+in `projectDetails.js`. The Folio notes say what is not known yet (timeline, live demo link, repository links),
+so none of those are on the page.
+
+Each project in `src/data.js` has a `repo` field. With a `url` the card and the modal show a "View on GitHub" link;
+with `url: null` they show a greyed-out "Soon" placeholder, so a link can be added by changing one line.
+
 ## Resume PDF
 
 The downloadable resume is `public/Muhammad_Wajdan_Ismail_Resume.pdf`, built from `resume/resume.tex`.
