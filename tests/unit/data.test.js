@@ -3,7 +3,7 @@ import { contacts, education, experience, projects, tabs, techCount, techGroups 
 
 describe('content', () => {
   it('has the entries from the CV', () => {
-    expect(projects.map((p) => p.title)).toEqual(['GigPilot', 'Social Media Website']);
+    expect(projects.map((p) => p.title)).toEqual(['GigPilot', 'Folio Digital Wallet']);
     expect(experience.map((e) => e.org)).toEqual([
       'E Ocean Technologies',
       'Vaulsys (Vendor for NayaPay)',

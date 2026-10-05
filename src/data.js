@@ -1,5 +1,8 @@
-// All site content lives here. Source of truth: the CV (JAVA_MuhammadWajdanIsmail_Resume_SWE.pdf).
-// Do not add claims, numbers or dates that are not in the CV.
+// All site content lives here. Source of truth: the CV (JAVA_MuhammadWajdanIsmail_Resume_SWE.pdf), and for the
+// Folio project its handoff notes. The long project write-ups are in projectDetails.js.
+// Do not add claims, numbers or dates that are not in those sources.
+
+import { FOLIO_MEDIA, projectDetails } from './projectDetails.js';
 
 export const GITHUB_URL = 'https://github.com/thedistortedwajdan';
 
@@ -56,19 +59,32 @@ export const projects = [
       'Normalized MySQL schemas, with query builders and stored procedures for secure data operations.',
     ],
     chips: ['Java', 'Spring Boot', 'ReactJS', 'Tailwind', 'MySQL', 'JWT'],
+    // No repository link yet: the button on the card and in the modal shows as a placeholder until `url` is set.
+    repo: { url: null },
+    detail: projectDetails.gigpilot,
   },
   {
-    id: 'social-media',
-    viz: 'social',
-    meta: ['Full-stack', 'React + Express'],
-    title: 'Social Media Website',
-    summary: 'A social network for sharing posts, photos and video.',
+    id: 'folio',
+    // The card shows a real screenshot instead of a line drawing. The file name gets the theme appended.
+    preview: {
+      file: 'card',
+      dir: FOLIO_MEDIA,
+      width: 760,
+      height: 475,
+      alt: 'The Folio wallet overview: a balance with a trend line, money in and out, the account IBAN and recent activity.',
+    },
+    meta: ['Full-stack', 'React + Spring Boot'],
+    title: 'Folio Digital Wallet',
+    summary: 'A digital wallet where every transfer is checked by IBAN, bank and account holder, then confirmed with an MPIN.',
     bullets: [
-      'Like and dislike, follow and unfollow, and uploads for posts, videos and pictures.',
-      'React frontend with Material-UI, axios for API requests and HashRouter for routing.',
-      'Express.js backend with middleware and routes, and mongoose for database operations.',
+      'Pay by IBAN: the app checks the IBAN, finds the bank and confirms the account holder before any money moves.',
+      'A keypad MPIN on every transfer, with a 30-second lock after three wrong tries.',
+      'Retry-safe payments, and an activity ledger that shows the balance before and after every entry.',
+      'A Spring Boot API with JWT, roles and row-locked transactions.',
     ],
-    chips: ['ReactJS', 'Material-UI', 'Express.js', 'MongoDB', 'axios'],
+    chips: ['React', 'Vite', 'Vitest', 'Spring Boot', 'PostgreSQL', 'JWT', 'Docker'],
+    repo: { url: 'https://github.com/thedistortedwajdan/SpringBoot-Digital-Wallet' },
+    detail: projectDetails.folio,
   },
 ];
 
