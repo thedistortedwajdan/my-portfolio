@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 
 const FOLIO = /See details: Folio/;
 const REPO = 'https://github.com/thedistortedwajdan/SpringBoot-Digital-Wallet';
+const DEMO = 'https://digital-wallet-webapp.wajdan-mohammad.workers.dev/';
 const GIG = /See details: GigPilot/;
 const dialog = (page, name = 'Folio Digital Wallet') => page.getByRole('dialog', { name });
 const slideTab = (page, name) => dialog(page).getByRole('tab', { name, exact: true });
@@ -740,20 +741,29 @@ test.describe('the GitHub button', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
   // Nothing here goes out to GitHub: its pages are answered from the test.
-  const offline = (context) => context.route('https://github.com/**', (route) => route.fulfill({ contentType: 'text/html', body: '<title>repo</title>' }));
+  const offline = (context) =>
+    Promise.all(
+      ['https://github.com/**', 'https://digital-wallet-webapp.wajdan-mohammad.workers.dev/**'].map((pattern) =>
+        context.route(pattern, (route) => route.fulfill({ contentType: 'text/html', body: '<title>external</title>' })),
+      ),
+    );
 
-  test('each card has See details and View on GitHub side by side, in that order', async ({ page }) => {
+  test('each card has See details, View demo app and View on GitHub, in that order, all the same height', async ({ page }) => {
     await page.goto('/#projects');
     for (const card of await page.locator('.proj').all()) {
+      await card.scrollIntoViewIfNeeded();
       const actions = card.locator('.proj-actions').locator('> *');
-      await expect(actions).toHaveCount(2);
+      await expect(actions).toHaveCount(3);
       await expect(actions.nth(0)).toContainText('See details');
-      await expect(actions.nth(1)).toContainText('View on GitHub');
-      const first = await actions.nth(0).boundingBox();
-      const second = await actions.nth(1).boundingBox();
-      expect(second.x, 'side by side').toBeGreaterThan(first.x + first.width);
-      expect(Math.abs(second.y - first.y), 'on one line').toBeLessThan(6);
-      expect(Math.abs(second.height - first.height), 'the same height').toBeLessThan(4);
+      await expect(actions.nth(1)).toContainText('View demo app');
+      await expect(actions.nth(2)).toContainText('View on GitHub');
+      const boxes = [];
+      for (let i = 0; i < 3; i += 1) boxes.push(await actions.nth(i).boundingBox());
+      expect(boxes[1].x, 'the demo button follows See details').toBeGreaterThan(boxes[0].x + boxes[0].width);
+      expect(Math.abs(boxes[1].y - boxes[0].y), 'on the same line').toBeLessThan(6);
+      for (const box of boxes) expect(Math.abs(box.height - boxes[0].height), 'the same height').toBeLessThan(4);
+      // The third may wrap on a narrow card, but it never sits before the others.
+      expect(boxes[2].y > boxes[0].y + 6 || boxes[2].x > boxes[1].x + boxes[1].width).toBe(true);
     }
   });
 
@@ -803,9 +813,12 @@ test.describe('the GitHub button', () => {
     expect(await page.getByRole('dialog').count(), 'a click on it does not open the card either').toBe(0);
   });
 
-  test('the keyboard goes from See details straight to View on GitHub', async ({ page }) => {
+  test('the keyboard goes from See details to View demo app, then View on GitHub, then out of the card', async ({ page }) => {
     await page.goto('/#projects');
     await page.getByRole('button', { name: FOLIO }).focus();
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('link', { name: /View demo app: Folio/ })).toBeFocused();
+    expect(await page.getByRole('link', { name: /View demo app: Folio/ }).evaluate((n) => getComputedStyle(n).outlineStyle)).toBe('solid');
     await page.keyboard.press('Tab');
     await expect(page.getByRole('link', { name: /View on GitHub: Folio/ })).toBeFocused();
     expect(await page.getByRole('link', { name: /View on GitHub: Folio/ }).evaluate((n) => getComputedStyle(n).outlineStyle)).toBe('solid');
@@ -905,5 +918,184 @@ test.describe('the GitHub button', () => {
     await page.keyboard.press('Escape');
     await expect(dialog(page, 'GigPilot')).toBeHidden();
     await expect(page.getByRole('button', { name: GIG })).toBeFocused();
+  });
+});
+
+test.describe('the demo button', () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  // Nothing here goes out to the real demo: its pages are answered from the test.
+  const offline = (context) => context.route('https://digital-wallet-webapp.wajdan-mohammad.workers.dev/**', (route) => route.fulfill({ contentType: 'text/html', body: '<title>demo</title>' }));
+
+  test('the Folio card opens the demo app in a new tab, and does not open the card', async ({ page, context }) => {
+    await offline(context);
+    await page.goto('/#projects');
+    const link = page.getByRole('link', { name: /View demo app: Folio Digital Wallet/ });
+    await link.scrollIntoViewIfNeeded();
+    await expect(link).toHaveAttribute('href', DEMO);
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    const [popup] = await Promise.all([context.waitForEvent('page'), link.click()]);
+    expect(popup.url()).toBe(DEMO);
+    await popup.close();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page).toHaveURL(/#projects$/);
+  });
+
+  test('a click on the demo button by position opens the demo, while a click beside it still opens the card', async ({ page, context }) => {
+    await offline(context);
+    await page.goto('/#projects');
+    const card = page.locator('.proj').nth(1);
+    await card.scrollIntoViewIfNeeded();
+    const box = await card.getByRole('link', { name: /View demo app/ }).boundingBox();
+    const [popup] = await Promise.all([context.waitForEvent('page'), page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)]);
+    expect(popup.url()).toBe(DEMO);
+    await popup.close();
+    await expect(dialog(page)).toHaveCount(0);
+    const desc = await card.locator('.desc').boundingBox();
+    await page.mouse.click(desc.x + desc.width / 2, desc.y + desc.height / 2);
+    await expect(dialog(page)).toBeVisible();
+  });
+
+  test('GigPilot shows a greyed-out demo placeholder that cannot be used', async ({ page, context }) => {
+    const opened = [];
+    context.on('page', (p) => opened.push(p.url()));
+    await page.goto('/#projects');
+    const placeholder = page.getByRole('button', { name: /View demo app: GigPilot \(link coming soon\)/ });
+    await expect(placeholder).toBeVisible();
+    await expect(placeholder).toBeDisabled();
+    await expect(placeholder).toContainText('Soon');
+    await expect(placeholder).toHaveAttribute('title', 'The demo link will be added soon');
+    expect(await placeholder.evaluate((n) => [getComputedStyle(n).cursor, getComputedStyle(n).borderStyle])).toEqual(['not-allowed', 'dashed']);
+    await placeholder.click({ force: true });
+    await page.waitForTimeout(300);
+    expect(opened).toEqual([]);
+    expect(await page.getByRole('dialog').count()).toBe(0);
+  });
+
+  test('the real demo button stands out from the GitHub one, and the placeholder does not', async ({ page }) => {
+    await page.goto('/#projects');
+    await page.locator('.proj').nth(1).scrollIntoViewIfNeeded();
+    const look = await page.evaluate(() => {
+      const read = (selector) => {
+        const style = getComputedStyle(document.querySelector(selector));
+        return [style.backgroundColor, style.borderColor, style.borderStyle];
+      };
+      return { demo: read('.proj:nth-of-type(2) .demo-link'), repo: read('.proj:nth-of-type(2) .repo-link'), soon: read('.proj:nth-of-type(1) .demo-link') };
+    });
+    expect(look.demo[0], 'tinted, unlike the GitHub button').not.toBe(look.repo[0]);
+    expect(look.demo[1]).not.toBe(look.repo[1]);
+    expect(look.soon[2], 'a placeholder is dashed').toBe('dashed');
+    expect(look.demo[2]).toBe('solid');
+  });
+
+  test('it is inside the Folio modal, in the header before GitHub, and works from there', async ({ page, context }) => {
+    await offline(context);
+    await open(page);
+    const demo = dialog(page).getByRole('link', { name: /View demo app: Folio Digital Wallet/ });
+    const repo = dialog(page).getByRole('link', { name: /View on GitHub: Folio Digital Wallet/ });
+    await expect(demo).toBeVisible();
+    await expect(demo).toBeInViewport();
+    await expect(demo).toHaveAttribute('href', DEMO);
+    await expect(demo).toHaveAttribute('target', '_blank');
+    await expect(demo).toHaveAttribute('rel', 'noopener noreferrer');
+    const head = await dialog(page).locator('.pm-head').boundingBox();
+    const demoBox = await demo.boundingBox();
+    const repoBox = await repo.boundingBox();
+    expect(demoBox.y + demoBox.height).toBeLessThanOrEqual(head.y + head.height);
+    expect(demoBox.x + demoBox.width, 'beside GitHub, before it').toBeLessThanOrEqual(repoBox.x);
+    expect(Math.abs(demoBox.y - repoBox.y)).toBeLessThan(4);
+    const [popup] = await Promise.all([context.waitForEvent('page'), demo.click()]);
+    expect(popup.url()).toBe(DEMO);
+    await popup.close();
+    await expect(dialog(page), 'the modal stays open behind the new tab').toBeVisible();
+  });
+
+  test('the GigPilot modal has the demo placeholder too, next to the GitHub one', async ({ page }) => {
+    await open(page, GIG, 'GigPilot');
+    const modal = dialog(page, 'GigPilot');
+    const demo = modal.getByRole('button', { name: /View demo app: GigPilot \(link coming soon\)/ });
+    const repo = modal.getByRole('button', { name: /View on GitHub: GigPilot \(link coming soon\)/ });
+    await expect(demo).toBeDisabled();
+    await expect(repo).toBeDisabled();
+    const a = await demo.boundingBox();
+    const b = await repo.boundingBox();
+    expect(a.x + a.width).toBeLessThanOrEqual(b.x);
+    await expect(modal.getByRole('link', { name: /demo|GitHub/i })).toHaveCount(0);
+  });
+
+  test('in the modal the keyboard reaches the demo, then GitHub, before the slides', async ({ page }) => {
+    await open(page);
+    const order = [];
+    for (let i = 0; i < 5; i += 1) {
+      order.push(await page.evaluate(() => document.activeElement?.getAttribute('aria-label') || document.activeElement?.textContent?.trim().slice(0, 30)));
+      await page.keyboard.press('Tab');
+    }
+    const demo = order.findIndex((label) => /View demo app/.test(label ?? ''));
+    const github = order.findIndex((label) => /View on GitHub/.test(label ?? ''));
+    expect(demo, 'the demo link is among the first controls').toBeGreaterThanOrEqual(0);
+    expect(github).toBeGreaterThan(demo);
+    const slides = order.findIndex((label) => /Previous slide|Next slide|Send and receive/.test(label ?? ''));
+    if (slides >= 0) expect(github).toBeLessThan(slides);
+  });
+
+  for (const [name, width, height] of [['tablet', 820, 1100], ['phone', 400, 860], ['small phone', 320, 568]]) {
+    test(`${name}: the three card buttons stay inside the card, wrapping if they must`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto('/#projects');
+      for (const card of await page.locator('.proj').all()) {
+        await card.scrollIntoViewIfNeeded();
+        const cardBox = await card.boundingBox();
+        for (const selector of ['.proj-open', '.demo-link', '.repo-link']) {
+          const box = await card.locator(selector).boundingBox();
+          expect(box.x, selector).toBeGreaterThanOrEqual(cardBox.x);
+          expect(box.x + box.width, selector).toBeLessThanOrEqual(cardBox.x + cardBox.width);
+        }
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+    });
+
+    test(`${name}: the modal header holds both buttons without crowding the title or the close button`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await open(page);
+      const close = await dialog(page).getByRole('button', { name: 'Close project details' }).boundingBox();
+      const title = await dialog(page).getByRole('heading', { level: 2 }).boundingBox();
+      for (const name of [/View demo app/, /View on GitHub/]) {
+        const box = await dialog(page).getByRole('link', { name }).boundingBox();
+        expect(box.x + box.width).toBeLessThanOrEqual(width);
+        expect(box.y, 'under the title').toBeGreaterThanOrEqual(title.y + title.height - 2);
+        const clash = box.x < close.x + close.width && box.x + box.width > close.x && box.y < close.y + close.height && box.y + box.height > close.y;
+        expect(clash, 'does not overlap the close button').toBe(false);
+      }
+    });
+  }
+
+  for (const theme of ['light', 'dark']) {
+    test(`${theme}: the demo button keeps its contrast and passes the accessibility audit, on the card and in the modal`, async ({ browser }) => {
+      const context = await browser.newContext({ colorScheme: theme, viewport: { width: 1440, height: 900 } });
+      const page = await context.newPage();
+      await page.goto('/#projects');
+      await page.locator('.proj').nth(1).scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+      let results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`)).toEqual([]);
+      await page.getByRole('button', { name: FOLIO }).click();
+      await expect(dialog(page)).toBeVisible();
+      await page.waitForTimeout(400);
+      results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`)).toEqual([]);
+      await context.close();
+    });
+  }
+
+  test('every outbound link on the projects tab and in the modals is https, opens in a new tab and is noopener', async ({ page }) => {
+    await open(page);
+    const bad = await page.evaluate(() =>
+      [...document.querySelectorAll('.proj a[href], dialog a[href]')]
+        .filter((a) => !a.getAttribute('href').startsWith('/'))
+        .filter((a) => !a.href.startsWith('https://') || a.target !== '_blank' || !/noopener/.test(a.rel))
+        .map((a) => a.href),
+    );
+    expect(bad).toEqual([]);
   });
 });

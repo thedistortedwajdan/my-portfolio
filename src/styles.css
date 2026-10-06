@@ -2385,8 +2385,8 @@ html:has(dialog[open]) .scene * {
   }
 }
 
-/* ---------- the GitHub button (card and modal) ---------- */
-.repo-link {
+/* ---------- the demo and GitHub buttons (card and modal) ---------- */
+.link-btn {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -2402,7 +2402,7 @@ html:has(dialog[open]) .scene * {
     border-color 0.2s,
     background-color 0.2s;
 }
-.repo-link svg {
+.link-btn svg {
   width: 15px;
   height: 15px;
   fill: none;
@@ -2411,25 +2411,25 @@ html:has(dialog[open]) .scene * {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.repo-link:hover {
+.link-btn:hover {
   background: var(--accent-soft);
   border-color: var(--accent);
 }
-.repo-link:focus-visible {
+.link-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 /* Until the link is known: the same button, greyed out, with a small "Soon" tag. */
-.repo-link.is-soon {
+.link-btn.is-soon {
   color: var(--ink-2);
   cursor: not-allowed;
   border-style: dashed;
 }
-.repo-link.is-soon:hover {
+.link-btn.is-soon:hover {
   background: transparent;
   border-color: var(--line);
 }
-.repo-link .soon {
+.link-btn .soon {
   padding: 0 7px;
   font: 500 10.5px var(--f-mono);
   letter-spacing: 0.06em;
@@ -2439,9 +2439,18 @@ html:has(dialog[open]) .scene * {
   border-radius: 99px;
 }
 /* On the card it sits above the button's cover, so the card opens everywhere except on this button. */
-.proj-repo {
+.proj-link {
   position: relative;
   z-index: 1;
+}
+/* The demo button is the one to press first, so it carries the accent. */
+.demo-link:not(.is-soon) {
+  color: var(--ink-strong);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.demo-link:not(.is-soon):hover {
+  background: color-mix(in srgb, var(--accent-soft) 70%, var(--accent));
 }
 .pm-links {
   display: flex;

@@ -61,6 +61,8 @@ export const projects = [
     chips: ['Java', 'Spring Boot', 'ReactJS', 'Tailwind', 'MySQL', 'JWT'],
     // No repository link yet: the button on the card and in the modal shows as a placeholder until `url` is set.
     repo: { url: null },
+    // No demo link yet either: a placeholder is shown until `url` is set.
+    demo: { url: null },
     detail: projectDetails.gigpilot,
   },
   {
@@ -84,6 +86,7 @@ export const projects = [
     ],
     chips: ['React', 'Vite', 'Vitest', 'Spring Boot', 'PostgreSQL', 'JWT', 'Docker'],
     repo: { url: 'https://github.com/thedistortedwajdan/SpringBoot-Digital-Wallet' },
+    demo: { url: 'https://digital-wallet-webapp.wajdan-mohammad.workers.dev/' },
     detail: projectDetails.folio,
   },
 ];

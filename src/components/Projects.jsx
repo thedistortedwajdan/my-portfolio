@@ -3,7 +3,7 @@ import { GITHUB_URL, projects } from '../data.js';
 import { illustrations } from './Illustrations.jsx';
 import Panel from './Panel.jsx';
 import ProjectModal from './ProjectModal.jsx';
-import RepoLink from './RepoLink.jsx';
+import { DemoLink, RepoLink } from './ProjectLinks.jsx';
 
 function ProjectCard({ project, theme, onOpen }) {
   const Viz = illustrations[project.viz];
@@ -47,7 +47,7 @@ function ProjectCard({ project, theme, onOpen }) {
         </ul>
         <div className="proj-actions">
           {/* The whole card is the click target: this button's ::after covers it, and keyboard focus rings the card.
-              The GitHub link sits above that cover so it stays clickable on its own. */}
+              The demo and GitHub links sit above that cover so they stay clickable on their own. */}
           <button
             className="proj-open"
             type="button"
@@ -60,7 +60,8 @@ function ProjectCard({ project, theme, onOpen }) {
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
           </button>
-          <RepoLink repo={project.repo} title={project.title} className="proj-repo" />
+          <DemoLink demo={project.demo} title={project.title} className="proj-link" />
+          <RepoLink repo={project.repo} title={project.title} className="proj-link" />
         </div>
       </div>
     </article>

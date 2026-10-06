@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import { useAnimatedDialog } from '../hooks/useAnimatedDialog.js';
 import Carousel from './Carousel.jsx';
-import RepoLink from './RepoLink.jsx';
+import { DemoLink, RepoLink } from './ProjectLinks.jsx';
 
 // A block with nothing in it (for example a list whose lines were all taken out) is left out of the page, so
 // content can be trimmed in projectDetails.js without leaving an empty box behind.
@@ -178,6 +178,7 @@ export default function ProjectModal({ project, theme, onClose }) {
           <h2 id={titleId}>{project.title}</h2>
           <p className="pm-tagline">{detail.tagline}</p>
           <div className="pm-links">
+            <DemoLink demo={project.demo} title={project.title} />
             <RepoLink repo={project.repo} title={project.title} />
           </div>
         </div>

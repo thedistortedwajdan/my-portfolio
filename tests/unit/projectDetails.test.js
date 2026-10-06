@@ -70,6 +70,28 @@ describe('repositories', () => {
   });
 });
 
+describe('demos', () => {
+  it('give Folio its live demo and leave GigPilot as a placeholder until a link exists', () => {
+    const [gig, wallet] = projects;
+    expect(gig.demo).toEqual({ url: null });
+    expect(wallet.demo.url).toBe('https://digital-wallet-webapp.wajdan-mohammad.workers.dev/');
+    const url = new URL(wallet.demo.url);
+    expect(url.protocol).toBe('https:');
+    expect(url.hostname).toBe('digital-wallet-webapp.wajdan-mohammad.workers.dev');
+  });
+
+  it('give every project a demo entry, any link in it is https, and it is not the repository link', () => {
+    for (const project of projects) {
+      expect(project, project.title).toHaveProperty('demo');
+      if (project.demo.url) {
+        expect(project.demo.url.startsWith('https://')).toBe(true);
+        expect(project.demo.url).not.toBe(project.repo.url);
+        expect(project.demo.url).not.toContain('github.com');
+      }
+    }
+  });
+});
+
 describe('slides', () => {
   for (const project of projects) {
     describe(project.title, () => {

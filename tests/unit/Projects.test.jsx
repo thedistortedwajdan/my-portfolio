@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Projects from '../../src/components/Projects.jsx';
-import RepoLink from '../../src/components/RepoLink.jsx';
+import { DemoLink, RepoLink } from '../../src/components/ProjectLinks.jsx';
 import { projects } from '../../src/data.js';
 
 const folio = projects.find((p) => p.id === 'folio');
@@ -554,23 +554,28 @@ describe('the GitHub button', () => {
     expect(open).not.toHaveBeenCalled();
   });
 
-  it('sits next to the See details button on each card, in that order, as a separate control', () => {
+  it('sits after See details and View demo app on each card, in that order, as a separate control', () => {
     render(<Projects />);
     for (const card of [folioCard(), gigCard()]) {
       const actions = card.querySelector('.proj-actions');
       const controls = [...actions.children];
-      expect(controls).toHaveLength(2);
+      expect(controls).toHaveLength(3);
       expect(controls[0]).toHaveTextContent('See details');
-      expect(controls[1]).toHaveTextContent('View on GitHub');
-      expect(controls[0].contains(controls[1]), 'not nested inside the card button').toBe(false);
-      expect(controls[1].className).toContain('proj-repo');
+      expect(controls[1]).toHaveTextContent('View demo app');
+      expect(controls[2]).toHaveTextContent('View on GitHub');
+      for (const link of controls.slice(1)) {
+        expect(controls[0].contains(link), 'not nested inside the card button').toBe(false);
+        expect(link.className).toContain('proj-link');
+      }
     }
   });
 
-  it('is reached by keyboard straight after See details', async () => {
+  it('is reached by keyboard after See details and View demo app', async () => {
     const user = userEvent.setup();
     render(<Projects />);
     within(folioCard()).getByRole('button', { name: `See details: ${folio.title}` }).focus();
+    await user.tab();
+    expect(within(folioCard()).getByRole('link', { name: /View demo app/ })).toHaveFocus();
     await user.tab();
     expect(within(folioCard()).getByRole('link', { name: /View on GitHub/ })).toHaveFocus();
   });
@@ -625,7 +630,96 @@ describe('the GitHub button', () => {
 
   it('floats above the card cover in the stylesheet, so the card opens everywhere except on this button', () => {
     const css = readFileSync('src/styles.css', 'utf8');
-    expect(css).toMatch(/\.proj-repo \{[^}]*position: relative;[^}]*z-index: 1;/);
-    expect(css).toMatch(/\.repo-link\.is-soon \{[^}]*cursor: not-allowed;/);
+    expect(css).toMatch(/\.proj-link \{[^}]*position: relative;[^}]*z-index: 1;/);
+    expect(css).toMatch(/\.link-btn\.is-soon \{[^}]*cursor: not-allowed;/);
+  });
+});
+
+describe('the demo button', () => {
+  const DEMO_URL = 'https://digital-wallet-webapp.wajdan-mohammad.workers.dev/';
+  const folioCard = () => screen.getByRole('heading', { level: 3, name: folio.title }).closest('article');
+  const gigCard = () => screen.getByRole('heading', { level: 3, name: gigpilot.title }).closest('article');
+
+  it('is a link to the Folio demo app, opening in a new tab, with a name that says where it goes', () => {
+    render(<Projects />);
+    const link = within(folioCard()).getByRole('link', { name: `View demo app: ${folio.title} (opens in a new tab)` });
+    expect(link).toHaveAttribute('href', DEMO_URL);
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(link).toHaveTextContent('View demo app');
+    expect(link.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    expect(link.className).toContain('demo-link');
+    expect(link.className).not.toContain('repo-link');
+  });
+
+  it('is a greyed-out placeholder for GigPilot, which has no demo yet: a disabled button, not a dead link', () => {
+    render(<Projects />);
+    const placeholder = within(gigCard()).getByRole('button', { name: `View demo app: ${gigpilot.title} (link coming soon)` });
+    expect(placeholder).toBeDisabled();
+    expect(placeholder).toHaveTextContent('View demo app');
+    expect(placeholder).toHaveTextContent('Soon');
+    expect(placeholder).toHaveAttribute('title', 'The demo link will be added soon');
+    expect(within(gigCard()).queryByRole('link', { name: /demo/i })).not.toBeInTheDocument();
+  });
+
+  it('does nothing when the placeholder is clicked: no dialog, no new window', async () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const user = userEvent.setup();
+    render(<Projects />);
+    await user.click(within(gigCard()).getByRole('button', { name: /View demo app/ }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it('does not open the project when its link is used', async () => {
+    const user = userEvent.setup();
+    render(<Projects />);
+    const link = within(folioCard()).getByRole('link', { name: /View demo app/ });
+    link.addEventListener('click', (event) => event.preventDefault());
+    await user.click(link);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('is also inside the Folio modal, before the GitHub link, with the same address', async () => {
+    const user = userEvent.setup();
+    const dialog = await openProject(user, folio.title);
+    const demo = within(dialog).getByRole('link', { name: `View demo app: ${folio.title} (opens in a new tab)` });
+    const repo = within(dialog).getByRole('link', { name: /View on GitHub/ });
+    expect(demo).toHaveAttribute('href', DEMO_URL);
+    expect(demo).toHaveAttribute('target', '_blank');
+    expect(demo.getAttribute('rel')).toContain('noopener');
+    expect(dialog.querySelector('.pm-head').contains(demo), 'in the header, always in view').toBe(true);
+    expect(demo.compareDocumentPosition(repo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(demo.parentElement).toBe(repo.parentElement);
+    expect(demo.compareDocumentPosition(dialog.querySelector('.pm-body')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('is also inside the GigPilot modal, as the same placeholder', async () => {
+    const user = userEvent.setup();
+    const dialog = await openProject(user, gigpilot.title);
+    const placeholder = within(dialog).getByRole('button', { name: /View demo app/ });
+    expect(placeholder).toBeDisabled();
+    expect(placeholder).toHaveTextContent('Soon');
+    expect(within(dialog).queryByRole('link', { name: /demo/i })).not.toBeInTheDocument();
+  });
+
+  it('turns from the placeholder into a real link as soon as a url is set, and the two buttons never mix up', () => {
+    const { rerender } = render(<DemoLink demo={{ url: null }} title="Demo" />);
+    expect(screen.getByRole('button', { name: /View demo app: Demo/ })).toBeDisabled();
+    rerender(<DemoLink demo={{ url: 'https://example.org/app' }} title="Demo" />);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /View demo app: Demo/ })).toHaveAttribute('href', 'https://example.org/app');
+    rerender(<DemoLink title="Demo" />);
+    expect(screen.getByRole('button', { name: /View demo app: Demo/ })).toBeDisabled();
+    rerender(<RepoLink repo={{ url: 'https://github.com/someone/demo' }} title="Demo" />);
+    expect(screen.getByRole('link', { name: /View on GitHub: Demo/ })).toHaveAttribute('href', 'https://github.com/someone/demo');
+    expect(screen.queryByRole('link', { name: /demo app/ })).not.toBeInTheDocument();
+  });
+
+  it('shares its look with the GitHub button, and stands out with the accent when it is a real link', () => {
+    const css = readFileSync('src/styles.css', 'utf8');
+    render(<Projects />);
+    for (const link of document.querySelectorAll('.demo-link, .repo-link')) expect(link.className).toContain('link-btn');
+    expect(css).toMatch(/\.demo-link:not\(\.is-soon\) \{[^}]*background: var\(--accent-soft\);[^}]*border-color: var\(--accent\);/);
   });
 });

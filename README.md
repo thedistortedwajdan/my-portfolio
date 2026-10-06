@@ -23,8 +23,9 @@ the slides (clips, screenshots, phone screens, text cards) and the tabs. The Fol
 in `projectDetails.js`. The Folio notes say what is not known yet (timeline, live demo link, repository links),
 so none of those are on the page.
 
-Each project in `src/data.js` has a `repo` field. With a `url` the card and the modal show a "View on GitHub" link;
-with `url: null` they show a greyed-out "Soon" placeholder, so a link can be added by changing one line.
+Each project in `src/data.js` has a `repo` and a `demo` field. With a `url` the card and the modal show a "View on
+GitHub" and a "View demo app" link; with `url: null` they show a greyed-out "Soon" placeholder, so a link can be
+added by changing one line.
 
 ## Resume PDF
 
