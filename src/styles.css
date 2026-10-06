@@ -545,29 +545,6 @@ button {
     border-bottom: 1px solid var(--line);
   }
 }
-.viz {
-  width: 100%;
-  max-width: 360px;
-  height: auto;
-  display: block;
-}
-.viz * {
-  fill: none;
-  stroke: var(--ink-2);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.viz .a {
-  stroke: var(--accent);
-}
-.viz .f {
-  fill: var(--accent);
-  stroke: var(--accent);
-}
-.viz .p {
-  fill: var(--surface);
-}
 .pbody {
   min-width: 0;
   display: flex;
@@ -2092,13 +2069,27 @@ html:has(dialog[open]) .scene * {
   overflow: hidden;
   background: var(--surface);
 }
-.cs-shot,
-.cs-video {
+.cs-shot {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: top;
+}
+/* A clip keeps its whole frame: 16:9 clips would lose their sides if they were cropped to the window. */
+.cs-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--surface-2);
+}
+.cs-cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
 }
 .cs-blank {
   background: var(--surface-2);
@@ -2185,12 +2176,6 @@ html:has(dialog[open]) .scene * {
 .cs-phone-video {
   max-width: none;
   aspect-ratio: 390 / 844;
-}
-.cs-art {
-  width: min(100%, 520px);
-}
-.cs-art .viz {
-  max-width: none;
 }
 .cs-cards {
   display: grid;

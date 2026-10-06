@@ -4,6 +4,8 @@ import AxeBuilder from '@axe-core/playwright';
 const FOLIO = /See details: Folio/;
 const REPO = 'https://github.com/thedistortedwajdan/SpringBoot-Digital-Wallet';
 const DEMO = 'https://digital-wallet-webapp.wajdan-mohammad.workers.dev/';
+const GIG_REPO = 'https://github.com/thedistortedwajdan/gigpilot-freelance-marketplace-React-SpringBoot';
+const GIG_DEMO = 'https://gigpilot-freelance-marketplace-react-springboot.wajdan-mohammad.workers.dev/';
 const GIG = /See details: GigPilot/;
 const dialog = (page, name = 'Folio Digital Wallet') => page.getByRole('dialog', { name });
 const slideTab = (page, name) => dialog(page).getByRole('tab', { name, exact: true });
@@ -22,7 +24,8 @@ async function watch(page) {
   const bad = [];
   page.on('console', (msg) => msg.type() === 'error' && problems.push(msg.text()));
   page.on('pageerror', (err) => problems.push(err.message));
-  page.on('requestfailed', (request) => request.url().includes('/projects/') && bad.push(`failed: ${request.url()}`));
+  // A browser cancels a clip it was still downloading when its slide is left. That is not a failure.
+  page.on('requestfailed', (request) => request.url().includes('/projects/') && request.failure()?.errorText !== 'net::ERR_ABORTED' && bad.push(`failed: ${request.url()}`));
   page.on('response', (response) => response.url().includes('/projects/') && response.status() >= 400 && bad.push(`${response.status()}: ${response.url()}`));
   return { problems, bad };
 }
@@ -52,16 +55,22 @@ test.describe('the project cards', () => {
     await expect(page.getByRole('button', { name: /See details/ })).toHaveCount(2);
   });
 
-  test('the Folio card shows a real screenshot that loads, in the right theme', async ({ browser }) => {
+  test('both cards show a real picture that loads, in the right theme: the GigPilot cover and the Folio screen', async ({ browser }) => {
     for (const theme of ['light', 'dark']) {
       const context = await browser.newContext({ colorScheme: theme, viewport: { width: 1440, height: 900 } });
       const page = await context.newPage();
       await page.goto('/#projects');
-      const shot = page.locator('.proj-shot');
-      await shot.scrollIntoViewIfNeeded();
-      await expect(shot).toHaveAttribute('src', `/projects/folio/card-${theme}.webp`);
-      await expect.poll(() => shot.evaluate((img) => img.complete && img.naturalWidth)).toBe(760);
-      await expect(shot).toHaveAttribute('alt', /Folio wallet overview/);
+      const gig = page.locator('.proj').nth(0).locator('.proj-shot');
+      const wallet = page.locator('.proj').nth(1).locator('.proj-shot');
+      await gig.scrollIntoViewIfNeeded();
+      await expect(gig).toHaveAttribute('src', `/projects/gigpilot/card-${theme}.webp`);
+      await expect(gig).toHaveAttribute('alt', /GigPilot on a laptop and on two phones/);
+      await expect.poll(() => gig.evaluate((img) => img.complete && [img.naturalWidth, img.naturalHeight])).toEqual([760, 424]);
+      await wallet.scrollIntoViewIfNeeded();
+      await expect(wallet).toHaveAttribute('src', `/projects/folio/card-${theme}.webp`);
+      await expect(wallet).toHaveAttribute('alt', /Folio wallet overview/);
+      await expect.poll(() => wallet.evaluate((img) => img.complete && [img.naturalWidth, img.naturalHeight])).toEqual([760, 475]);
+      await expect(page.locator('svg.viz'), 'no line drawing is left').toHaveCount(0);
       await context.close();
     }
   });
@@ -171,16 +180,111 @@ test.describe('the modal', () => {
     await expect(page.locator('video')).toHaveCount(0);
   });
 
-  test('opens GigPilot on its own text slides, without fetching any Folio slides or clips', async ({ page }) => {
+  test('opens GigPilot on its cover with 14 slides, without fetching any Folio slides or clips', async ({ page }) => {
     const folioRequests = [];
     page.on('request', (request) => /\/projects\/folio\/(screens|video|thumbs)\//.test(request.url()) && folioRequests.push(request.url()));
+    const { problems, bad } = await watch(page);
     await open(page, GIG, 'GigPilot');
-    await expect(dialog(page, 'GigPilot').locator('.cs-count')).toHaveText('1 / 3');
-    await expect(dialog(page, 'GigPilot').locator('.pm-status')).toHaveText('Full-stack project');
-    await expect(dialog(page, 'GigPilot').locator('.cs-slide:not([inert]) svg.viz')).toBeVisible();
-    await dialog(page, 'GigPilot').getByRole('tab', { name: 'What it does', exact: true }).click();
-    await expect(dialog(page, 'GigPilot').locator('.cs-slide:not([inert]) .cs-cards li')).toHaveCount(4);
+    const modal = dialog(page, 'GigPilot');
+    await expect(modal.locator('.cs-count')).toHaveText('1 / 14');
+    await expect(modal.locator('.pm-status'), 'no status pill').toHaveCount(0);
+    await expect(modal.locator('.cs-slide:not([inert]) img.cs-cover')).toBeVisible();
+    await expect.poll(() => modal.locator('.cs-slide:not([inert]) img.cs-cover').evaluate((img) => img.complete && img.naturalWidth)).toBe(1600);
+    await expect(modal.locator('.cs-slide:not([inert]) .cs-window'), 'a cover has no window').toHaveCount(0);
+    await modal.getByRole('tab', { name: 'Find work', exact: true }).click();
+    await expect.poll(() => modal.locator('.cs-slide:not([inert]) img.cs-shot').evaluate((img) => img.complete && img.naturalWidth)).toBe(1800);
     expect(folioRequests).toEqual([]);
+    expect(bad).toEqual([]);
+    expect(problems).toEqual([]);
+  });
+
+  test('GigPilot shows every one of its 14 slides: each loads, in order, with its title and caption', async ({ page }) => {
+    test.setTimeout(90000);
+    const { problems, bad } = await watch(page);
+    await open(page, GIG, 'GigPilot');
+    const modal = dialog(page, 'GigPilot');
+    const titles = [
+      'GigPilot',
+      'Find work and bid',
+      'Find work',
+      'Bid on a task',
+      'Post a task',
+      'Hire a freelancer',
+      'Chat on a task',
+      'Review delivered work',
+      'Approve and review',
+      'Profile and growth',
+      'Admin moderation',
+      'Admin: disputes',
+      'On a phone',
+      'Phone, dark mode and filters',
+    ];
+    for (const [index, title] of titles.entries()) {
+      await modal.getByRole('tab', { name: title, exact: true }).click();
+      await expect(modal.locator('.cs-count')).toHaveText(`${index + 1} / 14`);
+      await expect(modal.locator('.cs-caption h3')).toHaveText(title);
+      const current = modal.locator('.cs-slide:not([inert])');
+      await expect(current).toBeVisible();
+      const kind = await current.evaluate((n) => (n.querySelector('video') ? 'video' : n.querySelector('.cs-phones') ? 'phones' : n.querySelector('.cs-cover') ? 'cover' : 'shot'));
+      if (kind === 'shot') await expect.poll(() => current.locator('img.cs-shot').evaluate((img) => img.complete && img.naturalWidth)).toBe(1800);
+      if (kind === 'cover') await expect.poll(() => current.locator('img.cs-cover').evaluate((img) => img.complete && img.naturalWidth)).toBe(1600);
+      if (kind === 'phones') {
+        await expect(current.locator('.cs-phone')).toHaveCount(3);
+        await expect.poll(() => current.locator('.cs-phone img').evaluateAll((imgs) => imgs.every((img) => img.complete && img.naturalWidth === 780))).toBe(true);
+      }
+      if (kind === 'video') {
+        const poster = await current.locator('video').getAttribute('poster');
+        const type = await page.evaluate((src) => fetch(src).then((r) => r.ok && r.headers.get('content-type')), poster);
+        expect(type, `poster of ${title}`).toMatch(/image\/jpeg/);
+      }
+    }
+    await page.waitForTimeout(400);
+    expect(bad, 'no missing or failed files').toEqual([]);
+    expect(problems, 'no console errors, no CSP violations').toEqual([]);
+  });
+
+  test('the GigPilot clips really play: they are MP4 files at the size of the GIFs they came from', async ({ page }) => {
+    test.skip(!(await (async () => { await page.goto('/'); return page.evaluate(() => document.createElement('video').canPlayType('video/mp4; codecs="avc1.42E01E"') !== ''); })()), 'this browser has no H.264 decoder');
+    await open(page, GIG, 'GigPilot');
+    const modal = dialog(page, 'GigPilot');
+    const expected = [
+      ['Find work and bid', 960, 540],
+      ['Chat on a task', 960, 540],
+      ['Phone, dark mode and filters', 420, 908],
+    ];
+    for (const [title, width, height] of expected) {
+      await modal.getByRole('tab', { name: title, exact: true }).click();
+      const video = modal.locator('.cs-slide:not([inert]) video');
+      await expect.poll(() => video.evaluate((v) => v.readyState)).toBeGreaterThanOrEqual(2);
+      await expect.poll(() => video.evaluate((v) => v.paused)).toBe(false);
+      expect(await video.evaluate((v) => [v.videoWidth, v.videoHeight, v.error]), title).toEqual([width, height, null]);
+      expect(await video.evaluate((v) => Math.round(v.duration)), 'about the 21 seconds of the GIF').toBeGreaterThanOrEqual(20);
+    }
+  });
+
+  test('a 16:9 GigPilot clip shows its whole frame inside the window, not cropped', async ({ page }) => {
+    await open(page, GIG, 'GigPilot');
+    const modal = dialog(page, 'GigPilot');
+    await modal.getByRole('tab', { name: 'Find work and bid', exact: true }).click();
+    const fit = await modal.locator('.cs-slide:not([inert]) video').evaluate((v) => getComputedStyle(v).objectFit);
+    expect(fit).toBe('contain');
+    const box = await modal.locator('.cs-slide:not([inert]) video').boundingBox();
+    const screen = await modal.locator('.cs-slide:not([inert]) .cs-screen').boundingBox();
+    expect(box.width).toBeLessThanOrEqual(screen.width + 1);
+    expect(box.height).toBeLessThanOrEqual(screen.height + 1);
+  });
+
+  test('in dark mode the GigPilot find work slide shows its dark screen, and its thumbnail too', async ({ browser }) => {
+    const context = await browser.newContext({ colorScheme: 'dark', viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    await open(page, GIG, 'GigPilot');
+    const modal = dialog(page, 'GigPilot');
+    await modal.getByRole('tab', { name: 'Find work', exact: true }).click();
+    await expect(modal.locator('.cs-slide:not([inert]) img.cs-shot')).toHaveAttribute('src', '/projects/gigpilot/screens/02-find-work-dark.webp');
+    await expect(modal.getByRole('tab', { name: 'Find work', exact: true }).locator('img')).toHaveAttribute('src', '/projects/gigpilot/thumbs/02-find-work-dark.webp');
+    await modal.getByRole('tab', { name: 'Post a task', exact: true }).click();
+    await expect(modal.locator('.cs-slide:not([inert]) img.cs-shot')).toHaveAttribute('src', '/projects/gigpilot/screens/13-post-a-task.webp');
+    await context.close();
   });
 
   test('the page behind keeps the right tab and hash after the modal closes', async ({ page }) => {
@@ -659,14 +763,23 @@ test.describe('accessibility', () => {
     }
   }
 
-  test('GigPilot passes too, on its text slides', async ({ page }) => {
-    test.setTimeout(90000);
+  test('GigPilot passes too, on its cover, a clip, a screen, the phones and every details tab', async ({ page }) => {
+    test.setTimeout(120000);
     await open(page, GIG, 'GigPilot');
-    for (const title of ['The idea', 'What it does', 'How it is built']) {
-      await dialog(page, 'GigPilot').getByRole('tab', { name: title, exact: true }).click();
+    const modal = dialog(page, 'GigPilot');
+    const audit = async (label) => {
       await page.waitForTimeout(600);
       const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
-      expect(results.violations.map((v) => v.id), title).toEqual([]);
+      expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`), label).toEqual([]);
+    };
+    await audit('the cover');
+    for (const title of ['Find work and bid', 'Find work', 'On a phone']) {
+      await modal.getByRole('tab', { name: title, exact: true }).click();
+      await audit(title);
+    }
+    for (const tab of ['How it works', 'Under the hood', 'Stack']) {
+      await modal.getByRole('tab', { name: tab, exact: true }).last().click();
+      await audit(tab);
     }
   });
 
@@ -675,7 +788,7 @@ test.describe('accessibility', () => {
       const context = await browser.newContext({ colorScheme, viewport: { width: 1440, height: 900 } });
       const page = await context.newPage();
       await page.goto('/#projects');
-      await page.locator('.proj-shot').scrollIntoViewIfNeeded();
+      await page.locator('.proj-shot').last().scrollIntoViewIfNeeded();
       await page.waitForTimeout(400);
       const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
       expect(results.violations.map((v) => v.id)).toEqual([]);
@@ -743,7 +856,7 @@ test.describe('the GitHub button', () => {
   // Nothing here goes out to GitHub: its pages are answered from the test.
   const offline = (context) =>
     Promise.all(
-      ['https://github.com/**', 'https://digital-wallet-webapp.wajdan-mohammad.workers.dev/**'].map((pattern) =>
+      ['https://github.com/**', 'https://digital-wallet-webapp.wajdan-mohammad.workers.dev/**', 'https://gigpilot-freelance-marketplace-react-springboot.wajdan-mohammad.workers.dev/**'].map((pattern) =>
         context.route(pattern, (route) => route.fulfill({ contentType: 'text/html', body: '<title>external</title>' })),
       ),
     );
@@ -798,19 +911,19 @@ test.describe('the GitHub button', () => {
     await expect(dialog(page)).toHaveCount(0);
   });
 
-  test('GigPilot shows a greyed-out placeholder that cannot be used', async ({ page, context }) => {
-    const opened = [];
-    context.on('page', (p) => opened.push(p.url()));
+  test('GigPilot has its own repository link on the card, in a new tab, which does not open the card', async ({ page, context }) => {
+    await offline(context);
     await page.goto('/#projects');
-    const placeholder = page.getByRole('button', { name: /View on GitHub: GigPilot \(link coming soon\)/ });
-    await expect(placeholder).toBeVisible();
-    await expect(placeholder).toBeDisabled();
-    await expect(placeholder).toContainText('Soon');
-    expect(await placeholder.evaluate((n) => [getComputedStyle(n).cursor, getComputedStyle(n).borderStyle])).toEqual(['not-allowed', 'dashed']);
-    await placeholder.click({ force: true });
-    await page.waitForTimeout(300);
-    expect(opened).toEqual([]);
-    expect(await page.getByRole('dialog').count(), 'a click on it does not open the card either').toBe(0);
+    const link = page.getByRole('link', { name: /View on GitHub: GigPilot/ });
+    await link.scrollIntoViewIfNeeded();
+    await expect(link).toHaveAttribute('href', GIG_REPO);
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    await expect(page.getByRole('button', { name: /View on GitHub: GigPilot/ })).toHaveCount(0);
+    const [popup] = await Promise.all([context.waitForEvent('page'), link.click()]);
+    expect(popup.url()).toBe(GIG_REPO);
+    await popup.close();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
   test('the keyboard goes from See details to View demo app, then View on GitHub, then out of the card', async ({ page }) => {
@@ -844,12 +957,17 @@ test.describe('the GitHub button', () => {
     await expect(dialog(page), 'the modal stays open behind the new tab').toBeVisible();
   });
 
-  test('the GigPilot modal has the placeholder too', async ({ page }) => {
+  test('the GigPilot modal has its repository link too, in the header', async ({ page, context }) => {
+    await offline(context);
     await open(page, GIG, 'GigPilot');
-    const placeholder = dialog(page, 'GigPilot').getByRole('button', { name: /View on GitHub: GigPilot \(link coming soon\)/ });
-    await expect(placeholder).toBeVisible();
-    await expect(placeholder).toBeDisabled();
-    await expect(dialog(page, 'GigPilot').getByRole('link', { name: /GitHub/ })).toHaveCount(0);
+    const link = dialog(page, 'GigPilot').getByRole('link', { name: /View on GitHub: GigPilot/ });
+    await expect(link).toBeVisible();
+    await expect(link).toBeInViewport();
+    await expect(link).toHaveAttribute('href', GIG_REPO);
+    const [popup] = await Promise.all([context.waitForEvent('page'), link.click()]);
+    expect(popup.url()).toBe(GIG_REPO);
+    await popup.close();
+    await expect(dialog(page, 'GigPilot')).toBeVisible();
   });
 
   test('inside the modal the link is reached by keyboard after the title and before the slides', async ({ page }) => {
@@ -901,7 +1019,7 @@ test.describe('the GitHub button', () => {
       const context = await browser.newContext({ colorScheme: theme, viewport: { width: 1440, height: 900 } });
       const page = await context.newPage();
       await page.goto('/#projects');
-      await page.locator('.proj-shot').scrollIntoViewIfNeeded();
+      await page.locator('.proj-shot').last().scrollIntoViewIfNeeded();
       let results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
       expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`)).toEqual([]);
       await page.getByRole('button', { name: FOLIO }).click();
@@ -913,7 +1031,7 @@ test.describe('the GitHub button', () => {
     });
   }
 
-  test('the placeholder in the modal is not in the way: GigPilot opens and closes as before', async ({ page }) => {
+  test('GigPilot opens and closes as before, and focus returns to its card button', async ({ page }) => {
     await open(page, GIG, 'GigPilot');
     await page.keyboard.press('Escape');
     await expect(dialog(page, 'GigPilot')).toBeHidden();
@@ -957,36 +1075,39 @@ test.describe('the demo button', () => {
     await expect(dialog(page)).toBeVisible();
   });
 
-  test('GigPilot shows a greyed-out demo placeholder that cannot be used', async ({ page, context }) => {
-    const opened = [];
-    context.on('page', (p) => opened.push(p.url()));
+  test('GigPilot has its own demo link on the card, in a new tab, which does not open the card', async ({ page, context }) => {
+    await context.route('https://gigpilot-freelance-marketplace-react-springboot.wajdan-mohammad.workers.dev/**', (route) => route.fulfill({ contentType: 'text/html', body: '<title>demo</title>' }));
     await page.goto('/#projects');
-    const placeholder = page.getByRole('button', { name: /View demo app: GigPilot \(link coming soon\)/ });
-    await expect(placeholder).toBeVisible();
-    await expect(placeholder).toBeDisabled();
-    await expect(placeholder).toContainText('Soon');
-    await expect(placeholder).toHaveAttribute('title', 'The demo link will be added soon');
-    expect(await placeholder.evaluate((n) => [getComputedStyle(n).cursor, getComputedStyle(n).borderStyle])).toEqual(['not-allowed', 'dashed']);
-    await placeholder.click({ force: true });
-    await page.waitForTimeout(300);
-    expect(opened).toEqual([]);
-    expect(await page.getByRole('dialog').count()).toBe(0);
+    const link = page.getByRole('link', { name: /View demo app: GigPilot/ });
+    await link.scrollIntoViewIfNeeded();
+    await expect(link).toHaveAttribute('href', GIG_DEMO);
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    await expect(page.getByRole('button', { name: /View demo app: GigPilot/ })).toHaveCount(0);
+    const [popup] = await Promise.all([context.waitForEvent('page'), link.click()]);
+    expect(popup.url()).toBe(GIG_DEMO);
+    await popup.close();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
-  test('the real demo button stands out from the GitHub one, and the placeholder does not', async ({ page }) => {
+  test('the demo button stands out from the GitHub one on both cards', async ({ page }) => {
     await page.goto('/#projects');
     await page.locator('.proj').nth(1).scrollIntoViewIfNeeded();
-    const look = await page.evaluate(() => {
-      const read = (selector) => {
-        const style = getComputedStyle(document.querySelector(selector));
-        return [style.backgroundColor, style.borderColor, style.borderStyle];
-      };
-      return { demo: read('.proj:nth-of-type(2) .demo-link'), repo: read('.proj:nth-of-type(2) .repo-link'), soon: read('.proj:nth-of-type(1) .demo-link') };
-    });
-    expect(look.demo[0], 'tinted, unlike the GitHub button').not.toBe(look.repo[0]);
-    expect(look.demo[1]).not.toBe(look.repo[1]);
-    expect(look.soon[2], 'a placeholder is dashed').toBe('dashed');
-    expect(look.demo[2]).toBe('solid');
+    const look = await page.evaluate(() =>
+      [1, 2].map((n) => {
+        const read = (selector) => {
+          const style = getComputedStyle(document.querySelector(selector));
+          return [style.backgroundColor, style.borderColor, style.borderStyle];
+        };
+        return { demo: read(`.proj:nth-of-type(${n}) .demo-link`), repo: read(`.proj:nth-of-type(${n}) .repo-link`) };
+      }),
+    );
+    for (const card of look) {
+      expect(card.demo[0], 'tinted, unlike the GitHub button').not.toBe(card.repo[0]);
+      expect(card.demo[1]).not.toBe(card.repo[1]);
+      expect(card.demo[2]).toBe('solid');
+      expect(card.repo[2]).toBe('solid');
+    }
   });
 
   test('it is inside the Folio modal, in the header before GitHub, and works from there', async ({ page, context }) => {
@@ -1011,17 +1132,20 @@ test.describe('the demo button', () => {
     await expect(dialog(page), 'the modal stays open behind the new tab').toBeVisible();
   });
 
-  test('the GigPilot modal has the demo placeholder too, next to the GitHub one', async ({ page }) => {
+  test('the GigPilot modal has its demo link too, next to the GitHub one', async ({ page, context }) => {
+    await context.route('https://gigpilot-freelance-marketplace-react-springboot.wajdan-mohammad.workers.dev/**', (route) => route.fulfill({ contentType: 'text/html', body: '<title>demo</title>' }));
     await open(page, GIG, 'GigPilot');
     const modal = dialog(page, 'GigPilot');
-    const demo = modal.getByRole('button', { name: /View demo app: GigPilot \(link coming soon\)/ });
-    const repo = modal.getByRole('button', { name: /View on GitHub: GigPilot \(link coming soon\)/ });
-    await expect(demo).toBeDisabled();
-    await expect(repo).toBeDisabled();
+    const demo = modal.getByRole('link', { name: /View demo app: GigPilot/ });
+    const repo = modal.getByRole('link', { name: /View on GitHub: GigPilot/ });
+    await expect(demo).toHaveAttribute('href', GIG_DEMO);
     const a = await demo.boundingBox();
     const b = await repo.boundingBox();
     expect(a.x + a.width).toBeLessThanOrEqual(b.x);
-    await expect(modal.getByRole('link', { name: /demo|GitHub/i })).toHaveCount(0);
+    const [popup] = await Promise.all([context.waitForEvent('page'), demo.click()]);
+    expect(popup.url()).toBe(GIG_DEMO);
+    await popup.close();
+    await expect(modal.getByRole('button', { name: /coming soon/ })).toHaveCount(0);
   });
 
   test('in the modal the keyboard reaches the demo, then GitHub, before the slides', async ({ page }) => {

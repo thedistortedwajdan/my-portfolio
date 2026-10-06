@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import Carousel, { fileFor } from '../../src/components/Carousel.jsx';
 import Projects from '../../src/components/Projects.jsx';
 import { DemoLink, RepoLink } from '../../src/components/ProjectLinks.jsx';
 import { projects } from '../../src/data.js';
@@ -46,17 +47,23 @@ describe('project cards', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('show the Folio screenshot for the right theme, and GigPilot as a drawing', () => {
+  it('show each project as a real picture, for the right theme: the Folio screen and the GigPilot cover', () => {
     const { unmount } = render(<Projects theme="light" />);
-    const shot = screen.getByAltText(folio.preview.alt);
-    expect(shot.getAttribute('src')).toBe('/projects/folio/card-light.webp');
-    expect(shot).toHaveAttribute('width', '760');
-    expect(shot).toHaveAttribute('height', '475');
-    expect(shot).toHaveAttribute('loading', 'lazy');
-    expect(screen.getByRole('img', { name: /job card on the left/i })).toBeInTheDocument();
+    const wallet = screen.getByAltText(folio.preview.alt);
+    expect(wallet.getAttribute('src')).toBe('/projects/folio/card-light.webp');
+    expect(wallet).toHaveAttribute('width', '760');
+    expect(wallet).toHaveAttribute('height', '475');
+    expect(wallet).toHaveAttribute('loading', 'lazy');
+    const cover = screen.getByAltText(gigpilot.preview.alt);
+    expect(cover.getAttribute('src')).toBe('/projects/gigpilot/card-light.webp');
+    expect(cover).toHaveAttribute('width', '760');
+    expect(cover).toHaveAttribute('height', '424');
+    expect(cover).toHaveAttribute('loading', 'lazy');
+    expect(document.querySelectorAll('svg.viz'), 'no line drawings are left').toHaveLength(0);
     unmount();
     render(<Projects theme="dark" />);
     expect(screen.getByAltText(folio.preview.alt).getAttribute('src')).toBe('/projects/folio/card-dark.webp');
+    expect(screen.getByAltText(gigpilot.preview.alt).getAttribute('src')).toBe('/projects/gigpilot/card-dark.webp');
   });
 
   it('are clickable all over, through the button that stretches across the card', () => {
@@ -84,16 +91,22 @@ describe('the project modal', () => {
     await user.click(within(wallet).getByRole('button', { name: 'Close project details' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: `See details: ${gigpilot.title}` }));
-    expect(screen.getByRole('dialog').querySelector('.pm-status')).toHaveTextContent('Full-stack project');
+    expect(gigpilot.detail.status).toBeUndefined();
+    expect(screen.getByRole('dialog').querySelector('.pm-status')).toBeNull();
   });
 
   it('opens each project on its own slides and details', async () => {
     const user = userEvent.setup();
     const dialog = await openProject(user, gigpilot.title);
-    expect(counter(dialog)).toBe('1 / 3');
-    expect(within(dialog).getAllByRole('tab', { name: /^(The idea|What it does|How it is built)$/ })).toHaveLength(3);
-    expect(within(dialog).getByRole('tab', { name: 'Overview' })).toBeInTheDocument();
-    expect(within(dialog).queryByRole('tab', { name: 'Under the hood' })).not.toBeInTheDocument();
+    expect(counter(dialog)).toBe('1 / 14');
+    expect(within(dialog).getByRole('heading', { level: 3, name: 'GigPilot' })).toBeInTheDocument();
+    const slideTabs = within(dialog).getAllByRole('tab', { name: (name) => gigpilot.detail.slides.some((slide) => slide.title === name) });
+    expect(slideTabs).toHaveLength(14);
+    for (const name of ['Overview', 'How it works', 'Under the hood', 'Stack']) {
+      expect(within(dialog).getByRole('tab', { name })).toBeInTheDocument();
+    }
+    const tabs = within(dialog).getByRole('tablist', { name: 'Project details' });
+    expect(within(tabs).getAllByRole('tab')).toHaveLength(4);
   });
 
   it('closes with the close button, and the card is left as it was', async () => {
@@ -146,7 +159,7 @@ describe('the project modal', () => {
     await user.click(screen.getByRole('button', { name: 'Close project details' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: `See details: ${gigpilot.title}` }));
-    expect(counter(screen.getByRole('dialog'))).toBe('1 / 3');
+    expect(counter(screen.getByRole('dialog'))).toBe('1 / 14');
   });
 });
 
@@ -327,15 +340,57 @@ describe('the slide show', () => {
     expect(dialog.querySelector('.cs-slide:not([inert]) .cs-phone-video video')).not.toBeNull();
   });
 
-  it('shows the cards of a text slide, and the drawing of the first GigPilot slide', async () => {
+  it('opens GigPilot on its cover, with no window round it, and shows its clips and screens in order', async () => {
     const user = userEvent.setup();
     const dialog = await openProject(user, gigpilot.title);
-    expect(dialog.querySelector('.cs-slide:not([inert]) svg.viz')).not.toBeNull();
-    await user.click(within(dialog).getByRole('tab', { name: 'What it does' }));
-    const cards = dialog.querySelectorAll('.cs-slide:not([inert]) .cs-cards li');
-    expect(cards).toHaveLength(4);
-    expect(cards[0]).toHaveTextContent('Profiles and jobs');
-    expect(within(dialog).getAllByRole('tab', { name: 'What it does' })).toHaveLength(1);
+    const cover = dialog.querySelector('.cs-slide:not([inert]) img.cs-cover');
+    expect(cover.getAttribute('src')).toBe('/projects/gigpilot/cover.webp');
+    expect(cover).toHaveAttribute('alt', expect.stringMatching(/laptop and on two phones/));
+    expect(dialog.querySelector('.cs-slide:not([inert]) .cs-window'), 'a cover has no window').toBeNull();
+    const titles = gigpilot.detail.slides.map((slide) => slide.title);
+    await user.click(within(dialog).getByRole('button', { name: 'Next slide' }));
+    expect(within(dialog).getByRole('heading', { level: 3, name: titles[1] })).toBeInTheDocument();
+    expect(dialog.querySelector('.cs-slide:not([inert]) video').getAttribute('poster')).toBe('/projects/gigpilot/video/01-find-and-bid-poster.jpg');
+    expect(dialog.querySelector('.cs-slide:not([inert]) source').getAttribute('src')).toBe('/projects/gigpilot/video/01-find-and-bid.mp4');
+  });
+
+  it('uses the dark picture of a screen in dark mode where there is one, and the light one where there is not', async () => {
+    const user = userEvent.setup();
+    const light = await openProject(user, gigpilot.title);
+    await user.click(within(light).getByRole('tab', { name: 'Find work' }));
+    expect(light.querySelector('.cs-slide:not([inert]) img.cs-shot').getAttribute('src')).toBe('/projects/gigpilot/screens/03-find-work.webp');
+    await user.click(within(light).getByRole('tab', { name: 'Bid on a task' }));
+    expect(light.querySelector('.cs-slide:not([inert]) img.cs-shot').getAttribute('src')).toBe('/projects/gigpilot/screens/05-task-bid-form.webp');
+    await user.click(within(light).getByRole('button', { name: 'Close project details' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('shows the dark find work screen in dark mode, and falls back to the light picture for the rest', async () => {
+    const user = userEvent.setup();
+    const dialog = await openProject(user, gigpilot.title, { theme: 'dark' });
+    await user.click(within(dialog).getByRole('tab', { name: 'Find work' }));
+    expect(dialog.querySelector('.cs-slide:not([inert]) img.cs-shot').getAttribute('src')).toBe('/projects/gigpilot/screens/02-find-work-dark.webp');
+    await user.click(within(dialog).getByRole('tab', { name: 'Post a task' }));
+    expect(dialog.querySelector('.cs-slide:not([inert]) img.cs-shot').getAttribute('src')).toBe('/projects/gigpilot/screens/13-post-a-task.webp');
+    const thumbs = [...dialog.querySelectorAll('.cs-thumb img')].map((img) => img.getAttribute('src'));
+    expect(thumbs).toContain('/projects/gigpilot/thumbs/02-find-work-dark.webp');
+    expect(thumbs).not.toContain('/projects/gigpilot/thumbs/03-find-work.webp');
+  });
+
+  it('shows the three phones of GigPilot, and plays its phone clip in a phone frame', async () => {
+    const user = userEvent.setup();
+    const dialog = await openProject(user, gigpilot.title);
+    await user.click(within(dialog).getByRole('tab', { name: 'On a phone' }));
+    const phones = [...dialog.querySelectorAll('.cs-slide:not([inert]) .cs-phone img')].map((img) => img.getAttribute('src'));
+    expect(phones).toEqual([
+      '/projects/gigpilot/screens/m-02-find-work.webp',
+      '/projects/gigpilot/screens/m-04-task.webp',
+      '/projects/gigpilot/screens/m-05-chat.webp',
+    ]);
+    await user.click(within(dialog).getByRole('tab', { name: 'Phone, dark mode and filters' }));
+    const clip = dialog.querySelector('.cs-slide:not([inert]) .cs-phone-video video');
+    expect(clip).toHaveAttribute('width', '420');
+    expect(clip).toHaveAttribute('height', '908');
   });
 });
 
@@ -500,13 +555,26 @@ describe('the details', () => {
     expect(within(tablist).getAllByRole('tab').filter((t) => t.getAttribute('tabindex') === '0')).toHaveLength(1);
   });
 
-  it('tell GigPilot from the CV only: the overview, a stack in three groups, no extra claims', async () => {
+  it('tell GigPilot from its code: the overview, how it works, the backend, and a stack in four groups', async () => {
     const user = userEvent.setup();
     const dialog = await openProject(user, gigpilot.title);
     const overview = within(dialog).getByRole('tabpanel', { name: 'Overview' });
-    expect(overview).toHaveTextContent('Java, Spring Boot, ReactJS, Tailwind CSS, MySQL');
+    expect(overview).toHaveTextContent('GigPilot is a freelance task marketplace for short, local jobs');
+    expect(overview.querySelectorAll('.dash li')).toHaveLength(8);
+    await user.click(within(dialog).getByRole('tab', { name: 'How it works' }));
+    const how = within(dialog).getByRole('tabpanel', { name: 'How it works' });
+    expect([...how.querySelectorAll('.pm-steps h4')].map((h) => h.textContent)).toEqual(['Post', 'Bid and hire', 'Deliver', 'Review', 'Rate']);
+    await user.click(within(dialog).getByRole('tab', { name: 'Under the hood' }));
+    const hood = within(dialog).getByRole('tabpanel', { name: 'Under the hood' });
+    expect(hood).toHaveTextContent('rotating refresh tokens');
+    expect(hood.querySelector('.pm-note')).toHaveTextContent(/in-memory data layer/);
     await user.click(within(dialog).getByRole('tab', { name: 'Stack' }));
-    expect(within(dialog).getByRole('tabpanel', { name: 'Stack' }).querySelectorAll('.pm-group')).toHaveLength(3);
+    const stack = within(dialog).getByRole('tabpanel', { name: 'Stack' });
+    expect(stack.querySelectorAll('.pm-group')).toHaveLength(4);
+    expect(within(stack).getByRole('list', { name: 'Database' })).toHaveTextContent('MongoDB');
+    expect(within(stack).getByRole('list', { name: 'Backend' })).toHaveTextContent('Spring Boot 3');
+    expect(within(stack).getByRole('list', { name: 'Front end' })).toHaveTextContent('React 19');
+    expect(stack).not.toHaveTextContent(/MySQL/);
   });
 });
 
@@ -535,21 +603,26 @@ describe('the GitHub button', () => {
     expect(link.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('is a greyed-out placeholder for GigPilot, which has no link yet: a disabled button, not a dead link', () => {
+  it('is a link to the GigPilot repository too, with its own address', () => {
     render(<Projects />);
-    const placeholder = within(gigCard()).getByRole('button', { name: `View on GitHub: ${gigpilot.title} (link coming soon)` });
-    expect(placeholder).toBeDisabled();
-    expect(placeholder).toHaveTextContent('View on GitHub');
-    expect(placeholder).toHaveTextContent('Soon');
-    expect(placeholder).toHaveAttribute('title', 'The repository link will be added soon');
-    expect(within(gigCard()).queryByRole('link', { name: /GitHub/ })).not.toBeInTheDocument();
+    const link = within(gigCard()).getByRole('link', { name: `View on GitHub: ${gigpilot.title} (opens in a new tab)` });
+    expect(link).toHaveAttribute('href', 'https://github.com/thedistortedwajdan/gigpilot-freelance-marketplace-React-SpringBoot');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(within(gigCard()).queryByRole('button', { name: /View on GitHub/ })).not.toBeInTheDocument();
+    const folioLink = within(folioCard()).getByRole('link', { name: /View on GitHub/ });
+    expect(folioLink.getAttribute('href')).not.toBe(link.getAttribute('href'));
   });
 
-  it('does nothing when the placeholder is clicked: no dialog, no new window', async () => {
+  it('does nothing when a placeholder is clicked: no dialog, no new window', async () => {
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
     const user = userEvent.setup();
-    render(<Projects />);
-    await user.click(within(gigCard()).getByRole('button', { name: /View on GitHub/ }));
+    render(<RepoLink repo={{ url: null }} title="Demo" />);
+    const placeholder = screen.getByRole('button', { name: /View on GitHub: Demo \(link coming soon\)/ });
+    expect(placeholder).toBeDisabled();
+    expect(placeholder).toHaveTextContent('Soon');
+    expect(placeholder).toHaveAttribute('title', 'The repository link will be added soon');
+    await user.click(placeholder);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(open).not.toHaveBeenCalled();
   });
@@ -603,13 +676,13 @@ describe('the GitHub button', () => {
     expect(link.compareDocumentPosition(dialog.querySelector('.pm-body')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('is also inside the GigPilot modal, as the same placeholder', async () => {
+  it('is also inside the GigPilot modal, with the GigPilot address', async () => {
     const user = userEvent.setup();
     const dialog = await openProject(user, gigpilot.title);
-    const placeholder = within(dialog).getByRole('button', { name: /View on GitHub/ });
-    expect(placeholder).toBeDisabled();
-    expect(placeholder).toHaveTextContent('Soon');
-    expect(within(dialog).queryByRole('link', { name: /GitHub/ })).not.toBeInTheDocument();
+    const link = within(dialog).getByRole('link', { name: `View on GitHub: ${gigpilot.title} (opens in a new tab)` });
+    expect(link).toHaveAttribute('href', 'https://github.com/thedistortedwajdan/gigpilot-freelance-marketplace-React-SpringBoot');
+    expect(dialog.querySelector('.pm-head').contains(link)).toBe(true);
+    expect(within(dialog).queryByRole('button', { name: /View on GitHub/ })).not.toBeInTheDocument();
   });
 
   it('turns from the placeholder into a real link as soon as a url is set', () => {
@@ -652,21 +725,25 @@ describe('the demo button', () => {
     expect(link.className).not.toContain('repo-link');
   });
 
-  it('is a greyed-out placeholder for GigPilot, which has no demo yet: a disabled button, not a dead link', () => {
+  it('is a link to the GigPilot demo app too, with its own address', () => {
     render(<Projects />);
-    const placeholder = within(gigCard()).getByRole('button', { name: `View demo app: ${gigpilot.title} (link coming soon)` });
-    expect(placeholder).toBeDisabled();
-    expect(placeholder).toHaveTextContent('View demo app');
-    expect(placeholder).toHaveTextContent('Soon');
-    expect(placeholder).toHaveAttribute('title', 'The demo link will be added soon');
-    expect(within(gigCard()).queryByRole('link', { name: /demo/i })).not.toBeInTheDocument();
+    const link = within(gigCard()).getByRole('link', { name: `View demo app: ${gigpilot.title} (opens in a new tab)` });
+    expect(link).toHaveAttribute('href', 'https://gigpilot-freelance-marketplace-react-springboot.wajdan-mohammad.workers.dev/');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(within(gigCard()).queryByRole('button', { name: /View demo app/ })).not.toBeInTheDocument();
+    const folioLink = within(folioCard()).getByRole('link', { name: /View demo app/ });
+    expect(folioLink.getAttribute('href')).not.toBe(link.getAttribute('href'));
   });
 
-  it('does nothing when the placeholder is clicked: no dialog, no new window', async () => {
+  it('does nothing when the demo placeholder is clicked: no dialog, no new window', async () => {
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
     const user = userEvent.setup();
-    render(<Projects />);
-    await user.click(within(gigCard()).getByRole('button', { name: /View demo app/ }));
+    render(<DemoLink demo={{ url: null }} title="Demo" />);
+    const placeholder = screen.getByRole('button', { name: /View demo app: Demo \(link coming soon\)/ });
+    expect(placeholder).toBeDisabled();
+    expect(placeholder).toHaveAttribute('title', 'The demo link will be added soon');
+    await user.click(placeholder);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(open).not.toHaveBeenCalled();
   });
@@ -694,13 +771,14 @@ describe('the demo button', () => {
     expect(demo.compareDocumentPosition(dialog.querySelector('.pm-body')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('is also inside the GigPilot modal, as the same placeholder', async () => {
+  it('is also inside the GigPilot modal, before the GitHub link', async () => {
     const user = userEvent.setup();
     const dialog = await openProject(user, gigpilot.title);
-    const placeholder = within(dialog).getByRole('button', { name: /View demo app/ });
-    expect(placeholder).toBeDisabled();
-    expect(placeholder).toHaveTextContent('Soon');
-    expect(within(dialog).queryByRole('link', { name: /demo/i })).not.toBeInTheDocument();
+    const demo = within(dialog).getByRole('link', { name: `View demo app: ${gigpilot.title} (opens in a new tab)` });
+    const repo = within(dialog).getByRole('link', { name: /View on GitHub/ });
+    expect(demo).toHaveAttribute('href', 'https://gigpilot-freelance-marketplace-react-springboot.wajdan-mohammad.workers.dev/');
+    expect(demo.compareDocumentPosition(repo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(dialog).queryByRole('button', { name: /View demo app/ })).not.toBeInTheDocument();
   });
 
   it('turns from the placeholder into a real link as soon as a url is set, and the two buttons never mix up', () => {
@@ -721,5 +799,44 @@ describe('the demo button', () => {
     render(<Projects />);
     for (const link of document.querySelectorAll('.demo-link, .repo-link')) expect(link.className).toContain('link-btn');
     expect(css).toMatch(/\.demo-link:not\(\.is-soon\) \{[^}]*background: var\(--accent-soft\);[^}]*border-color: var\(--accent\);/);
+  });
+});
+
+describe('slide pictures', () => {
+  it('names a picture per theme with `file`, or lists the files itself with `files`', () => {
+    expect(fileFor({ file: '03-overview' }, 'light')).toBe('03-overview-light');
+    expect(fileFor({ file: '03-overview' }, 'dark')).toBe('03-overview-dark');
+    expect(fileFor({ files: { light: 'a', dark: 'b' } }, 'dark')).toBe('b');
+    expect(fileFor({ files: { light: 'a', dark: 'b' } }, 'light')).toBe('a');
+    expect(fileFor({ files: { light: 'only-light' } }, 'dark'), 'a missing dark picture falls back to the light one').toBe('only-light');
+  });
+
+  const slides = [
+    { kind: 'image', file: 'cover', title: 'Cover', caption: 'A cover picture, shown as it is.', alt: 'A cover.', width: 1600, height: 892 },
+    { kind: 'cards', title: 'Cards', caption: 'Three short cards of text.', items: [{ title: 'One', text: 'First.' }, { title: 'Two', text: 'Second.' }, { title: 'Three', text: 'Third.' }] },
+    { kind: 'shot', files: { light: 'screen-l', dark: 'screen-d' }, title: 'Screen', caption: 'A screen.', alt: 'A screen.', width: 1800, height: 1125 },
+  ];
+
+  it('still shows a slide of text cards, and a cover with no window round it', async () => {
+    const user = userEvent.setup();
+    render(<Carousel slides={slides} media="/m" theme="light" label="Demo" />);
+    const region = screen.getByRole('region', { name: 'Demo' });
+    expect(region.querySelector('.cs-slide:not([inert]) img.cs-cover').getAttribute('src')).toBe('/m/cover.webp');
+    expect(region.querySelector('.cs-slide:not([inert]) .cs-window')).toBeNull();
+    await user.click(within(region).getByRole('tab', { name: 'Cards' }));
+    const cards = region.querySelectorAll('.cs-slide:not([inert]) .cs-cards li');
+    expect(cards).toHaveLength(3);
+    expect(cards[0]).toHaveTextContent('One');
+    expect(within(region).getAllByRole('tab', { name: 'Cards' })).toHaveLength(1);
+  });
+
+  it('gives a cover a thumbnail of its own and a text slide a text thumbnail', () => {
+    render(<Carousel slides={slides} media="/m" theme="dark" label="Demo" />);
+    const region = screen.getByRole('region', { name: 'Demo' });
+    const tabs = within(region).getAllByRole('tab');
+    expect(tabs[0].querySelector('img').getAttribute('src')).toBe('/m/thumbs/cover.webp');
+    expect(tabs[1].querySelector('img')).toBeNull();
+    expect(tabs[1]).toHaveTextContent('Cards');
+    expect(tabs[2].querySelector('img').getAttribute('src')).toBe('/m/thumbs/screen-d.webp');
   });
 });

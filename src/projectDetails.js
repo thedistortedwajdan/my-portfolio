@@ -5,14 +5,18 @@
 //
 // Slide kinds:
 //   video         a clip with a poster:        { id, width, height }
-//   shot          a screenshot in a window:    { file, width, height, tall? }
-//   phones        phone screenshots side by side: { shots: [{ file, alt }], width, height }
-//   illustration  one of the line drawings:    { viz }
+//   shot          a screenshot in a window:    { file | files, width, height, tall? }
+//   phones        phone screenshots side by side: { shots: [{ file | files, alt }], width, height }
+//
+// A picture is named either by `file` (one pair of files, -light and -dark) or by `files: { light, dark }`.
+// A missing `dark` falls back to the light picture.
+//   image         a picture with no window:    { file, width, height }
 //   cards         short text cards:            { items: [{ title, text }] }
 //
 // Tab block kinds: text, note, facts, stats, list, steps, cards, stack.
 
 export const FOLIO_MEDIA = '/projects/folio';
+export const GIGPILOT_MEDIA = '/projects/gigpilot';
 
 const folio = {
   media: FOLIO_MEDIA,
@@ -270,35 +274,132 @@ const folio = {
 };
 
 const gigpilot = {
-  tagline: 'A freelance marketplace that connects employers and freelancers.',
-  status: 'Full-stack project',
+  media: GIGPILOT_MEDIA,
+  tagline: 'A freelance task marketplace for short, local jobs: employers post work, freelancers bid, and every task is tracked from the hire to a review.',
   slides: [
     {
-      kind: 'illustration',
-      viz: 'gigpilot',
-      title: 'The idea',
-      caption: 'A job card connected to freelancer bids, with one bid selected.',
+      kind: 'image',
+      file: 'cover',
+      title: 'GigPilot',
+      alt: 'GigPilot on a laptop and on two phones, one in the light theme and one in the dark theme, over a sunrise backdrop.',
+      caption: 'The Sunrise design: warm and light by day, a calm pre-dawn sky in dark mode, from phones to wide desktops.',
+      width: 1600,
+      height: 892,
     },
     {
-      kind: 'cards',
-      title: 'What it does',
-      caption: 'Employers post jobs and review bids; freelancers keep a profile and bid on work.',
-      items: [
-        { title: 'Profiles and jobs', text: 'Profile management and job posting for employers and freelancers.' },
-        { title: 'Bidding and tasks', text: 'Bidding and secure task workflows from the first bid to finished work.' },
-        { title: 'Sign-in and roles', text: 'JWT-based authentication and role-based access control, with modular controllers.' },
-        { title: 'Data', text: 'Normalized MySQL schemas, with query builders and stored procedures for secure data operations.' },
+      kind: 'video',
+      id: '01-find-and-bid',
+      title: 'Find work and bid',
+      caption: 'A freelancer filters the open tasks, opens one, writes a proposal and sends it.',
+      width: 960,
+      height: 540,
+    },
+    {
+      kind: 'shot',
+      files: { light: '03-find-work', dark: '02-find-work-dark' },
+      title: 'Find work',
+      alt: 'The find work page with a search box, category, budget and skill filters, a saved search, and task cards with their price and deadline.',
+      caption: 'Search and filter the open tasks, keep saved searches, and heart a task to shortlist it.',
+      width: 1800,
+      height: 1125,
+    },
+    {
+      kind: 'shot',
+      files: { light: '05-task-bid-form' },
+      title: 'Bid on a task',
+      alt: 'A task page with its four-step progress bar and a bid form with a price, days to finish, an introduction and a send proposal button.',
+      caption: 'A bid is a price, an estimate in days and a short introduction. A freelancer can also accept the posted budget straight away.',
+      width: 1800,
+      height: 1125,
+    },
+    {
+      kind: 'shot',
+      files: { light: '13-post-a-task' },
+      title: 'Post a task',
+      alt: 'The post a task form with a title, description, category, budget and skills, next to a live card showing how people will see the task.',
+      caption: 'Employers describe the job and see a live card of how it will look to freelancers.',
+      width: 1800,
+      height: 1125,
+    },
+    {
+      kind: 'video',
+      id: '03-hire-a-freelancer',
+      title: 'Hire a freelancer',
+      caption: 'An employer compares the proposals, chooses one, and starts chatting.',
+      width: 960,
+      height: 540,
+    },
+    {
+      kind: 'video',
+      id: '02-live-chat',
+      title: 'Chat on a task',
+      caption: 'Messages are sent and replies arrive without a refresh. The app checks for new ones every half second.',
+      width: 960,
+      height: 540,
+    },
+    {
+      kind: 'shot',
+      files: { light: '14-review-submitted-work' },
+      title: 'Review delivered work',
+      alt: 'A task awaiting review, with a progress bar at the review step, the delivered files, and buttons to approve, ask for changes, message or raise a problem.',
+      caption: 'The employer sees the delivered files and either approves the work, asks for changes, or raises a problem.',
+      width: 1800,
+      height: 1125,
+    },
+    {
+      kind: 'video',
+      id: '04-approve-and-review',
+      title: 'Approve and review',
+      caption: 'The employer approves the delivered work and leaves a five-star review.',
+      width: 960,
+      height: 540,
+    },
+    {
+      kind: 'shot',
+      files: { light: '09-profile-growth' },
+      title: 'Profile and growth',
+      alt: 'A freelancer profile with a rating, skills, a portfolio, a growth card with a progress bar, and counts of tasks taken and completed.',
+      caption: 'Profiles show reviews, skills and a portfolio, and a growth card tracks the completed tasks that unlock the next level.',
+      width: 1800,
+      height: 1125,
+    },
+    {
+      kind: 'video',
+      id: '05-admin-moderation',
+      title: 'Admin moderation',
+      caption: 'An admin settles a dispute and closes a report.',
+      width: 960,
+      height: 540,
+    },
+    {
+      kind: 'shot',
+      files: { light: '18-admin-disputes' },
+      title: 'Admin: disputes',
+      alt: 'The admin disputes page listing an open dispute between an employer and a freelancer, with a settle button.',
+      caption: 'Either side can raise a problem on an active task. An admin hears both sides and decides what happens to it.',
+      width: 1800,
+      height: 1125,
+    },
+    {
+      kind: 'phones',
+      title: 'On a phone',
+      caption: 'Find work, a task and its chat on the phone layout, with a bottom tab bar and bottom-sheet dialogs.',
+      width: 780,
+      height: 1688,
+      shots: [
+        { files: { light: 'm-02-find-work' }, alt: 'The find work page on a phone, with the search box and task cards.' },
+        { files: { light: 'm-04-task' }, alt: 'A task page on a phone.' },
+        { files: { light: 'm-05-chat' }, alt: 'The chat for a task on a phone.' },
       ],
     },
     {
-      kind: 'cards',
-      title: 'How it is built',
-      caption: 'A Spring Boot API behind a React and Tailwind front end.',
-      items: [
-        { title: 'Backend', text: 'Java and Spring Boot, with RESTful APIs for scalable service integration.' },
-        { title: 'Frontend', text: 'ReactJS and Tailwind CSS, with dynamic components, protected routes and a responsive UI.' },
-        { title: 'Database', text: 'MySQL, designed with normalized schemas.' },
-      ],
+      kind: 'video',
+      id: '06-mobile-dark-and-filters',
+      title: 'Phone, dark mode and filters',
+      caption: 'On a phone: dark mode, the filter sheet and the task details.',
+      width: 420,
+      height: 908,
+      phone: true,
     },
   ],
   tabs: [
@@ -308,24 +409,83 @@ const gigpilot = {
       blocks: [
         {
           type: 'text',
-          text: 'A full-stack freelance marketplace that connects employers and freelancers, with profile management, job posting, bidding and secure task workflows.',
-        },
-        {
-          type: 'facts',
-          items: [
-            { label: 'Type', value: 'Full-stack web application' },
-            { label: 'Stack', value: 'Java, Spring Boot, ReactJS, Tailwind CSS, MySQL' },
-          ],
+          text: 'GigPilot is a freelance task marketplace for short, local jobs. An employer posts a task, freelancers send proposals, and the employer picks one. The work is then delivered, reviewed and rated, with chat, notifications and moderation along the way.',
         },
         {
           type: 'list',
           title: 'What it does',
           items: [
-            'Profile management, job posting, bidding and secure task workflows.',
-            'Spring Boot REST APIs with JWT authentication, role-based access control and modular controllers.',
-            'React and Tailwind frontend with protected routes and a responsive UI.',
-            'Normalized MySQL schemas, with query builders and stored procedures for secure data operations.',
+            'Employers post tasks with a budget, deadline, category, skills, location and attachments, and see a live card of how the task will look.',
+            'Freelancers search and filter open tasks by text, category, budget, skills and distance, with saved searches and favourites.',
+            'A bid is a price, an estimate in days and a message. Employers compare proposals and accept one, or a freelancer can accept the posted budget at once.',
+            'Work is handed in with a note and files. The employer approves it, asks for a revision, or cancels the task.',
+            'Every task has its own chat with unread counts, and a notification for each step.',
+            'Two-sided reviews on completed tasks, with edit and reply, and public profiles with an average rating and a growth tracker.',
+            'Admins can suspend people, hide tasks, remove reviews, settle disputes and close reports, and every action goes into an audit log.',
+            'Email verification and password reset, light, dark and system themes, and a layout that works from phones to wide desktops.',
           ],
+        },
+      ],
+    },
+    {
+      id: 'how',
+      label: 'How it works',
+      blocks: [
+        {
+          type: 'steps',
+          title: 'From task to review',
+          items: [
+            { title: 'Post', text: 'An employer posts a task with a budget, a deadline and the skills it needs. It is open to freelancers.' },
+            { title: 'Bid and hire', text: 'Freelancers send proposals. The employer chooses one, and the task is assigned to that freelancer.' },
+            { title: 'Deliver', text: 'The freelancer submits the work with a note and files, and the task goes into review.' },
+            { title: 'Review', text: 'The employer approves it, which completes the task, or asks for changes and the freelancer sends it again.' },
+            { title: 'Rate', text: 'Both sides can review each other once the task is completed.' },
+          ],
+        },
+        {
+          type: 'list',
+          title: 'When things change',
+          items: [
+            'An assigned freelancer can drop out, and the task goes back to the open pool.',
+            'Open tasks that pass their deadline expire on their own, checked by a scheduled job every hour.',
+            'Either side can raise a problem on an active task. An admin settles it by completing or cancelling the task.',
+            'People can report a user, a task or a review, and can block each other.',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'backend',
+      label: 'Under the hood',
+      blocks: [
+        {
+          type: 'list',
+          title: 'How the API is built',
+          items: [
+            'Assigning an open task is one atomic MongoDB update, so two people can never take the same task.',
+            'Sign-in uses short-lived JWT access tokens (30 minutes) and rotating refresh tokens (14 days). Only SHA-256 hashes of refresh tokens are stored, and presenting a revoked token revokes the whole family.',
+            'Roles (freelancer, employer and admin) are enforced on the server, and the sign-in endpoints are rate limited with an in-memory sliding window.',
+            'Search runs in MongoDB with filters on text, category, budget and skills, and a 2dsphere geo index for searching within a radius. Free text is quoted so it cannot act as a regex.',
+            'Uploads of up to 10 files and 10 MB each are checked by type and extension.',
+            'Public profiles are cached with Caffeine for 30 seconds, and the cache is cleared when a review changes.',
+          ],
+        },
+        {
+          type: 'text',
+          text: 'The API has OpenAPI docs with Swagger UI, health probes, a Dockerfile and docker-compose with MongoDB. A GitHub Actions workflow runs the backend tests, including integration tests against a real MongoDB with Testcontainers, and builds the front end.',
+        },
+        {
+          type: 'list',
+          title: 'On the front end',
+          items: [
+            'React 19, Vite, React Router and Tailwind CSS, with a design system of shared components.',
+            'Every screen talks to one data facade whose methods mirror the API endpoints, so the data source can change without touching a component.',
+            'Chat polls for new messages every 500 ms and the unread counters every 2.5 s, pausing while the tab is hidden.',
+          ],
+        },
+        {
+          type: 'note',
+          text: 'The live demo runs the front end on an in-memory data layer with sample accounts, so anyone can try it without signing up. The Spring Boot API implements the same endpoints.',
         },
       ],
     },
@@ -336,9 +496,10 @@ const gigpilot = {
         {
           type: 'stack',
           groups: [
-            { label: 'Backend', items: ['Java', 'Spring Boot', 'RESTful APIs', 'JWT authentication', 'Role-based access control', 'Modular controllers'] },
-            { label: 'Frontend', items: ['ReactJS', 'Tailwind CSS', 'Protected routes', 'Responsive UI'] },
-            { label: 'Database', items: ['MySQL', 'Normalized schemas', 'Query builders', 'Stored procedures'] },
+            { label: 'Front end', items: ['React 19', 'Vite', 'React Router 7', 'Tailwind CSS 4', 'axios'] },
+            { label: 'Backend', items: ['Java 17', 'Spring Boot 3', 'Spring Security', 'Spring Data MongoDB', 'JWT', 'Caffeine cache', 'OpenAPI and Swagger UI'] },
+            { label: 'Database', items: ['MongoDB', '2dsphere geo index'] },
+            { label: 'Testing and delivery', items: ['JUnit 5', 'Testcontainers', 'Docker and docker-compose', 'GitHub Actions CI'] },
           ],
         },
       ],

@@ -1,29 +1,23 @@
 import { useCallback, useState } from 'react';
 import { GITHUB_URL, projects } from '../data.js';
-import { illustrations } from './Illustrations.jsx';
 import Panel from './Panel.jsx';
 import ProjectModal from './ProjectModal.jsx';
 import { DemoLink, RepoLink } from './ProjectLinks.jsx';
 
 function ProjectCard({ project, theme, onOpen }) {
-  const Viz = illustrations[project.viz];
   const { preview } = project;
   return (
     <article className="proj">
       <div className="viz-wrap">
-        {preview ? (
-          <img
-            className="proj-shot"
-            src={`${preview.dir}/${preview.file}-${theme}.webp`}
-            width={preview.width}
-            height={preview.height}
-            alt={preview.alt}
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          Viz && <Viz />
-        )}
+        <img
+          className="proj-shot"
+          src={`${preview.dir}/${preview.file}-${theme}.webp`}
+          width={preview.width}
+          height={preview.height}
+          alt={preview.alt}
+          loading="lazy"
+          decoding="async"
+        />
       </div>
       <div className="pbody">
         <p className="meta">

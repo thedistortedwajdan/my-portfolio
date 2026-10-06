@@ -8,7 +8,12 @@ export default defineConfig({
   fullyParallel: true,
   retries: 0,
   reporter: [['list']],
-  use: { baseURL: 'http://localhost:4173', trace: 'retain-on-failure' },
+  // A failed test keeps a trace of its actions, network and console. Screenshots and page snapshots are left out:
+  // they made traces of the long project tests grow past a gigabyte while a run was going.
+  use: {
+    baseURL: 'http://localhost:4173',
+    trace: { mode: 'retain-on-failure', screenshots: false, snapshots: false, sources: false },
+  },
   webServer: {
     command: 'npm run build && npm run preview',
     url: 'http://localhost:4173',

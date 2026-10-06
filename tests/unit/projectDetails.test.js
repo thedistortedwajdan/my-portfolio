@@ -3,12 +3,13 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { projects } from '../../src/data.js';
 import { hasContent } from '../../src/components/ProjectModal.jsx';
-import { FOLIO_MEDIA, projectDetails } from '../../src/projectDetails.js';
+import { fileFor } from '../../src/components/Carousel.jsx';
+import { FOLIO_MEDIA, GIGPILOT_MEDIA, projectDetails } from '../../src/projectDetails.js';
 
 const publicPath = (url) => path.join(process.cwd(), 'public', url);
 const themes = ['light', 'dark'];
 const blockTypes = ['text', 'note', 'facts', 'stats', 'list', 'steps', 'cards', 'stack'];
-const slideKinds = ['video', 'shot', 'phones', 'illustration', 'cards'];
+const slideKinds = ['video', 'shot', 'phones', 'image', 'cards'];
 
 const folio = projectDetails.folio;
 const everyText = (value) => {
@@ -37,29 +38,36 @@ describe('projects', () => {
     }
   });
 
-  it('shows the Folio card as a real screenshot, and GigPilot as its drawing', () => {
+  it('shows both cards as real pictures: the Folio screen and the GigPilot cover', () => {
     const [gig, wallet] = projects;
-    expect(gig.viz).toBe('gigpilot');
-    expect(gig.preview).toBeUndefined();
+    expect(gig.viz).toBeUndefined();
+    expect(gig.preview.dir).toBe(GIGPILOT_MEDIA);
     expect(wallet.preview.dir).toBe(FOLIO_MEDIA);
-    expect(wallet.preview.alt.length).toBeGreaterThan(30);
-    for (const theme of themes) {
-      const file = publicPath(`${wallet.preview.dir}/${wallet.preview.file}-${theme}.webp`);
-      expect(existsSync(file), `${theme} card image`).toBe(true);
-      expect(statSync(file).size, 'a small image for a card').toBeLessThan(60_000);
+    for (const project of projects) {
+      expect(project.preview.alt.length).toBeGreaterThan(30);
+      for (const theme of themes) {
+        const file = publicPath(`${project.preview.dir}/${project.preview.file}-${theme}.webp`);
+        expect(existsSync(file), `${project.title} ${theme} card image`).toBe(true);
+        expect(statSync(file).size, 'a small image for a card').toBeLessThan(60_000);
+      }
     }
+    expect(gig.preview.height / gig.preview.width).toBeCloseTo(1060 / 1900, 2);
   });
 });
 
 describe('repositories', () => {
-  it('give Folio its GitHub repository and leave GigPilot as a placeholder until a link exists', () => {
+  it('give both projects their own GitHub repository', () => {
     const [gig, wallet] = projects;
-    expect(gig.repo).toEqual({ url: null });
     expect(wallet.repo.url).toBe('https://github.com/thedistortedwajdan/SpringBoot-Digital-Wallet');
-    const url = new URL(wallet.repo.url);
-    expect(url.protocol).toBe('https:');
-    expect(url.hostname).toBe('github.com');
-    expect(url.pathname.split('/').filter(Boolean)).toEqual(['thedistortedwajdan', 'SpringBoot-Digital-Wallet']);
+    expect(gig.repo.url).toBe('https://github.com/thedistortedwajdan/gigpilot-freelance-marketplace-React-SpringBoot');
+    for (const project of projects) {
+      const url = new URL(project.repo.url);
+      expect(url.protocol).toBe('https:');
+      expect(url.hostname).toBe('github.com');
+      expect(url.pathname.split('/').filter(Boolean)).toHaveLength(2);
+      expect(url.pathname.split('/')[1]).toBe('thedistortedwajdan');
+    }
+    expect(gig.repo.url).not.toBe(wallet.repo.url);
   });
 
   it('give every project a repo entry, and any link in it is https', () => {
@@ -71,13 +79,16 @@ describe('repositories', () => {
 });
 
 describe('demos', () => {
-  it('give Folio its live demo and leave GigPilot as a placeholder until a link exists', () => {
+  it('give both projects their own live demo', () => {
     const [gig, wallet] = projects;
-    expect(gig.demo).toEqual({ url: null });
     expect(wallet.demo.url).toBe('https://digital-wallet-webapp.wajdan-mohammad.workers.dev/');
-    const url = new URL(wallet.demo.url);
-    expect(url.protocol).toBe('https:');
-    expect(url.hostname).toBe('digital-wallet-webapp.wajdan-mohammad.workers.dev');
+    expect(gig.demo.url).toBe('https://gigpilot-freelance-marketplace-react-springboot.wajdan-mohammad.workers.dev/');
+    for (const project of projects) {
+      const url = new URL(project.demo.url);
+      expect(url.protocol).toBe('https:');
+      expect(url.hostname.endsWith('.workers.dev')).toBe(true);
+    }
+    expect(gig.demo.url).not.toBe(wallet.demo.url);
   });
 
   it('give every project a demo entry, any link in it is https, and it is not the repository link', () => {
@@ -108,7 +119,7 @@ describe('slides', () => {
 
       it('give every picture alt text and a size, so nothing jumps while it loads', () => {
         for (const slide of slides) {
-          if (slide.kind === 'shot') {
+          if (slide.kind === 'shot' || slide.kind === 'image') {
             expect(slide.alt.length).toBeGreaterThan(30);
             expect(slide.width).toBeGreaterThan(0);
             expect(slide.height).toBeGreaterThan(0);
@@ -263,9 +274,87 @@ describe('what the write-ups claim', () => {
     expect(backend).toContain('commit or roll back together');
   });
 
-  it('for GigPilot, says only what the CV says', () => {
+  it('for GigPilot, matches the code: MongoDB, Spring Boot 3, JWT and React 19, and nothing it does not do', () => {
     const gig = JSON.stringify(projectDetails.gigpilot);
-    for (const term of ['Spring Boot', 'JWT', 'MySQL', 'Tailwind', 'stored procedures', 'protected routes']) expect(gig).toContain(term);
-    expect(gig).not.toMatch(/users|downloads|million|%|revenue/i);
+    for (const term of ['MongoDB', 'Spring Boot 3', 'JWT', 'React 19', 'Tailwind CSS 4', 'Testcontainers', 'rotating refresh tokens', 'atomic MongoDB update']) expect(gig).toContain(term);
+    // The earlier write-up came from an older version of the project.
+    expect(gig).not.toMatch(/MySQL|stored procedures|query builders|normalized/i);
+    // Chat polls; it does not use sockets, so the page must not claim live sockets or push.
+    expect(gig).not.toMatch(/websocket|socket\.io|server-sent/i);
+    expect(gig).toMatch(/polls for new messages every 500 ms/);
+    expect(gig).toMatch(/in-memory data layer/);
+    expect(gig).not.toMatch(/users|downloads|million|revenue/i);
+  });
+});
+
+describe('GigPilot media', () => {
+  const gig = projectDetails.gigpilot;
+
+  it('has 14 slides in a sensible order: the cover first, 6 clips, 6 screens, one phone slide', () => {
+    expect(gig.slides).toHaveLength(14);
+    expect(gig.slides[0].kind).toBe('image');
+    expect(gig.slides[1].title).toBe('Find work and bid');
+    expect(gig.slides.filter((s) => s.kind === 'video')).toHaveLength(6);
+    expect(gig.slides.filter((s) => s.kind === 'shot')).toHaveLength(6);
+    expect(gig.slides.filter((s) => s.kind === 'phones')).toHaveLength(1);
+    expect(gig.slides.filter((s) => s.kind === 'cards')).toHaveLength(0);
+    expect(gig.slides.filter((s) => s.phone)).toHaveLength(1);
+    const titles = gig.slides.map((s) => s.title);
+    expect(titles.indexOf('Post a task')).toBeLessThan(titles.indexOf('Hire a freelancer'));
+    expect(titles.indexOf('Hire a freelancer')).toBeLessThan(titles.indexOf('Review delivered work'));
+    expect(titles.indexOf('Review delivered work')).toBeLessThan(titles.indexOf('Admin: disputes'));
+  });
+
+  it('no slide shares its name with a details tab', () => {
+    const titles = gig.slides.map((s) => s.title);
+    for (const tab of gig.tabs) expect(titles).not.toContain(tab.label);
+    expect(new Set(titles).size).toBe(titles.length);
+  });
+
+  it('every file a slide points at exists, with a thumbnail, and is a sensible size', () => {
+    const files = [];
+    for (const slide of gig.slides) {
+      if (slide.kind === 'video') files.push(`video/${slide.id}.mp4`, `video/${slide.id}-poster.jpg`, `thumbs/${slide.id}.webp`);
+      if (slide.kind === 'image') files.push(`${slide.file}.webp`, `thumbs/${slide.file}.webp`);
+      for (const theme of themes) {
+        if (slide.kind === 'shot') files.push(`screens/${fileFor(slide, theme)}.webp`, `thumbs/${fileFor(slide, theme)}.webp`);
+        if (slide.kind === 'phones') for (const shot of slide.shots) files.push(`screens/${fileFor(shot, theme)}.webp`);
+      }
+      if (slide.kind === 'phones') files.push(`thumbs/${fileFor(slide.shots[0], 'light')}.webp`);
+    }
+    expect(new Set(files).size).toBeGreaterThan(30);
+    for (const file of new Set(files)) {
+      const full = publicPath(`${gig.media}/${file}`);
+      expect(existsSync(full), file).toBe(true);
+      const size = statSync(full).size;
+      expect(size, `${file} is not empty`).toBeGreaterThan(1000);
+      if (file.startsWith('thumbs/')) expect(size, `${file} is a small thumbnail`).toBeLessThan(25_000);
+      if (file.startsWith('screens/')) expect(size, `${file} is optimised`).toBeLessThan(200_000);
+      if (file.endsWith('.mp4')) expect(size, `${file} is a short clip`).toBeLessThan(600_000);
+    }
+  });
+
+  it('the clips are real MP4 files, and the posters are real JPEG files, not the original GIFs', () => {
+    for (const slide of gig.slides.filter((s) => s.kind === 'video')) {
+      const mp4 = readFileSync(publicPath(`${gig.media}/video/${slide.id}.mp4`));
+      expect(mp4.subarray(4, 8).toString('latin1'), `${slide.id} has an MP4 header`).toBe('ftyp');
+      const poster = readFileSync(publicPath(`${gig.media}/video/${slide.id}-poster.jpg`));
+      expect([...poster.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff]);
+    }
+    const cover = readFileSync(publicPath(`${gig.media}/cover.webp`));
+    expect(cover.subarray(0, 4).toString('latin1')).toBe('RIFF');
+    expect(cover.subarray(8, 12).toString('latin1')).toBe('WEBP');
+  });
+
+  it('only the find work screen has a dark version, and it is used for dark mode', () => {
+    const findWork = gig.slides.find((s) => s.title === 'Find work');
+    expect(fileFor(findWork, 'dark')).toBe('02-find-work-dark');
+    expect(fileFor(findWork, 'light')).toBe('03-find-work');
+    for (const slide of gig.slides.filter((s) => s.kind === 'shot' && s !== findWork)) expect(fileFor(slide, 'dark')).toBe(fileFor(slide, 'light'));
+  });
+
+  it('is told in the order a task lives: post, bid and hire, deliver, review, rate', () => {
+    const steps = gig.tabs.find((t) => t.id === 'how').blocks.find((b) => b.type === 'steps');
+    expect(steps.items.map((i) => i.title)).toEqual(['Post', 'Bid and hire', 'Deliver', 'Review', 'Rate']);
   });
 });

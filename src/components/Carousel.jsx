@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { illustrations } from './Illustrations.jsx';
 
 // A slide show for a project. It follows the "tabbed carousel" pattern: the thumbnails are tabs, each slide is
 // the panel of its tab, and the arrow buttons, the arrow keys and a swipe all move between them. Only the slide
@@ -11,10 +10,19 @@ function prefersReducedMotion() {
 
 const SWIPE_PX = 48;
 
+// The picture file of a slide or a phone shot, without its folder or extension. A project either names one
+// pair of files per theme (`file: '03-overview'` becomes 03-overview-light and 03-overview-dark), or lists them
+// itself (`files: { light: 'a', dark: 'b' }`), in which case a missing dark picture falls back to the light one.
+export function fileFor(item, theme) {
+  if (item.files) return item.files[theme] ?? item.files.light;
+  return `${item.file}-${theme}`;
+}
+
 function thumbOf(media, slide, theme) {
   if (slide.kind === 'video') return `${media}/thumbs/${slide.id}.webp`;
-  if (slide.kind === 'shot') return `${media}/thumbs/${slide.file}-${theme}.webp`;
-  if (slide.kind === 'phones') return `${media}/thumbs/${slide.shots[0].file}-${theme}.webp`;
+  if (slide.kind === 'image') return `${media}/thumbs/${slide.file}.webp`;
+  if (slide.kind === 'shot') return `${media}/thumbs/${fileFor(slide, theme)}.webp`;
+  if (slide.kind === 'phones') return `${media}/thumbs/${fileFor(slide.shots[0], theme)}.webp`;
   return null;
 }
 
@@ -107,7 +115,7 @@ function Video({ slide, media, active, label }) {
 }
 
 function Shot({ slide, media, theme, near, label }) {
-  const src = `${media}/screens/${slide.file}-${theme}.webp`;
+  const src = `${media}/screens/${fileFor(slide, theme)}.webp`;
   return (
     <Window label={label}>
       {near ? (
@@ -129,9 +137,9 @@ function Phones({ slide, media, theme, near }) {
   return (
     <div className="cs-phones">
       {slide.shots.map((shot) => (
-        <figure className="cs-phone" key={shot.file}>
+        <figure className="cs-phone" key={fileFor(shot, 'light')}>
           {near ? (
-            <img src={`${media}/screens/${shot.file}-${theme}.webp`} width={slide.width} height={slide.height} alt={shot.alt} decoding="async" />
+            <img src={`${media}/screens/${fileFor(shot, theme)}.webp`} width={slide.width} height={slide.height} alt={shot.alt} decoding="async" />
           ) : (
             <div className="cs-blank" aria-hidden="true" />
           )}
@@ -154,9 +162,13 @@ function Cards({ slide }) {
   );
 }
 
-function Illustration({ slide }) {
-  const Viz = illustrations[slide.viz];
-  return <div className="cs-art">{Viz && <Viz />}</div>;
+// A picture shown as it is, with no window around it: a cover image or a poster.
+function Cover({ slide, media, near }) {
+  return near ? (
+    <img className="cs-cover" src={`${media}/${slide.file}.webp`} width={slide.width} height={slide.height} alt={slide.alt} decoding="async" />
+  ) : (
+    <div className="cs-cover cs-blank" aria-hidden="true" />
+  );
 }
 
 function SlideBody({ slide, media, theme, index, current, label }) {
@@ -164,8 +176,8 @@ function SlideBody({ slide, media, theme, index, current, label }) {
   if (slide.kind === 'video') return <Video slide={slide} media={media} active={index === current} label={label} />;
   if (slide.kind === 'shot') return <Shot slide={slide} media={media} theme={theme} near={near} label={label} />;
   if (slide.kind === 'phones') return <Phones slide={slide} media={media} theme={theme} near={near} />;
-  if (slide.kind === 'cards') return <Cards slide={slide} />;
-  return <Illustration slide={slide} />;
+  if (slide.kind === 'image') return <Cover slide={slide} media={media} near={near} />;
+  return <Cards slide={slide} />;
 }
 
 export default function Carousel({ slides, media, theme, label, windowLabel = 'folio' }) {

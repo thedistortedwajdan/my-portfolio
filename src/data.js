@@ -2,7 +2,7 @@
 // Folio project its handoff notes. The long project write-ups are in projectDetails.js.
 // Do not add claims, numbers or dates that are not in those sources.
 
-import { FOLIO_MEDIA, projectDetails } from './projectDetails.js';
+import { FOLIO_MEDIA, GIGPILOT_MEDIA, projectDetails } from './projectDetails.js';
 
 export const GITHUB_URL = 'https://github.com/thedistortedwajdan';
 
@@ -48,21 +48,26 @@ export const sidebarStack = [
 export const projects = [
   {
     id: 'gigpilot',
-    viz: 'gigpilot',
-    meta: ['Full-stack', 'Java + React'],
+    // The card shows the cover picture. The file name gets the theme appended (the cover is the same in both).
+    preview: {
+      file: 'card',
+      dir: GIGPILOT_MEDIA,
+      width: 760,
+      height: 424,
+      alt: 'GigPilot on a laptop and on two phones, one in the light theme and one in the dark theme, over a sunrise backdrop.',
+    },
+    meta: ['Full-stack', 'React + Spring Boot'],
     title: 'GigPilot',
-    summary: 'A freelance marketplace that connects employers and freelancers.',
+    summary: 'A freelance task marketplace where employers post short, local jobs and freelancers bid on them.',
     bullets: [
-      'Profile management, job posting, bidding and secure task workflows.',
-      'Spring Boot REST APIs with JWT authentication, role-based access control and modular controllers.',
-      'React and Tailwind frontend with protected routes and a responsive UI.',
-      'Normalized MySQL schemas, with query builders and stored procedures for secure data operations.',
+      'Employers post tasks and hire from proposals; freelancers search, filter and bid, then deliver work for review.',
+      'A tracked task lifecycle with revision requests, cancellation and expiry, plus chat, notifications and two-sided reviews.',
+      'Admin tools for disputes, reports, suspensions and an audit trail.',
+      'A Spring Boot and MongoDB API with JWT and rotating refresh tokens, behind a React and Tailwind front end.',
     ],
-    chips: ['Java', 'Spring Boot', 'ReactJS', 'Tailwind', 'MySQL', 'JWT'],
-    // No repository link yet: the button on the card and in the modal shows as a placeholder until `url` is set.
-    repo: { url: null },
-    // No demo link yet either: a placeholder is shown until `url` is set.
-    demo: { url: null },
+    chips: ['React', 'Vite', 'Tailwind', 'Spring Boot', 'MongoDB', 'JWT', 'Docker'],
+    repo: { url: 'https://github.com/thedistortedwajdan/gigpilot-freelance-marketplace-React-SpringBoot' },
+    demo: { url: 'https://gigpilot-freelance-marketplace-react-springboot.wajdan-mohammad.workers.dev/' },
     detail: projectDetails.gigpilot,
   },
   {
